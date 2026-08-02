@@ -1,4 +1,4 @@
-# SCCRP Muzic — Music Release Browser & Scraper
+# SCRP Music — Music Release Browser & Scraper
 
 A **single-page application** (SPA) for browsing, searching, and managing music releases scraped via a **pluggable adapter system**. Built with React 19 + TypeScript 6 + Vite 8, featuring a dark/light theme, fuzzy search, virtualized list, persistent state via IndexedDB, and an integrated scraper with CORS proxy support.
 

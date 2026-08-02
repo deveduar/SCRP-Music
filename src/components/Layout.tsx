@@ -42,7 +42,7 @@ export function Layout() {
       <div className="p-4 border-b border-border-main flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold tracking-tight text-content">Sccrp Muzic</h1>
+            <h1 className="text-lg font-bold tracking-tight text-content">SCRP Muzic</h1>
             {!online && (
               <span className="flex items-center gap-1 text-[10px] text-amber-400 font-medium">
                 <WifiOff className="w-3 h-3" />

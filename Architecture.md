@@ -1,4 +1,4 @@
-# Arquitectura — Sccrp Muzic
+# Arquitectura — Scrp Music
 
 ## Visión general
 
@@ -722,7 +722,7 @@ Comunes:
 ### `storage/db.ts`
 
 ```ts
-const db = new Dexie('SccrpMuzic')
+const db = new Dexie('SCRP Muzic')
 
 db.version(3).stores({
   states:   'id, favorite, listenStatus, buyStatus, *tags',
@@ -931,8 +931,8 @@ Generado por el plugin en `dist/manifest.webmanifest`:
 
 ```json
 {
-  "name": "Sccrp Muzic — Release Browser & Scraper",
-  "short_name": "Sccrp Muzic",
+  "name": "Scrp Music — Release Browser & Scraper",
+  "short_name": "Scrp Music",
   "description": "Browse, search and manage music releases from any supported source via pluggable adapters",
   "theme_color": "#09090b",
   "background_color": "#09090b",

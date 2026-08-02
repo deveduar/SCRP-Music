@@ -31,7 +31,7 @@ export function Settings() {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
-    a.download = `sccrp-muzic-export-${new Date().toISOString().slice(0, 10)}.json`
+    a.download = `scrp-music-export-${new Date().toISOString().slice(0, 10)}.json`
     a.click()
     URL.revokeObjectURL(a.href)
   }
