@@ -133,3 +133,7 @@ src/
 └── ... App.tsx, main.tsx, index.css
 local_adapters/     # Pluggable site-specific adapters (one file per source + shared utilities)
 ```
+
+## Legal Disclaimer
+
+This software is provided as-is for educational and personal use. The built-in adapters scrape only from legal, publicly accessible sources (royalty-free music, Creative Commons APIs, public domain archives). However, users may create custom adapters for any website. **You are solely responsible for ensuring that your use of this software complies with all applicable laws and terms of service of the sites you access.** See [TERMS.md](./TERMS.md) for full terms.
