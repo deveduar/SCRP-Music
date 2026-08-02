@@ -14,8 +14,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'SCRP Muzic — Release Browser & Scraper',
-        short_name: 'SCRP Muzic',
+        name: 'SCRP Music — Release Browser & Scraper',
+        short_name: 'SCRP Music',
         description: 'Browse, search and manage music releases from any supported source via pluggable adapters',
         theme_color: '#09090b',
         background_color: '#09090b',

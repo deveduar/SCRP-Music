@@ -4,7 +4,7 @@ import type { Release } from '../types/release'
 import type { ScrapeJob } from '../types/scraper'
 import type { ExportPayload } from '../types/export'
 
-const db = new Dexie('ScrpMusic') as Dexie & {
+const db = new Dexie('SCRP Music') as Dexie & {
   states: EntityTable<UserReleaseState, 'id'>
   history: EntityTable<HistoryEntry, 'id'>
   settings: EntityTable<UserSettings, 'id'>
