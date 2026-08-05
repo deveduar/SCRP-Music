@@ -1,3 +1,5 @@
+import { isRelayAvailable } from './cors-proxy'
+
 const SCRAPE_PROXIES = [
   'https://corsproxy.io/?',
   'https://api.allorigins.win/raw?url=',
@@ -15,11 +17,14 @@ export function getCachedVideoId(query: string): string | undefined {
 // ─── API search (fast attempt) ──────────────────────────────────────
 
 async function tryApiSearch(query: string): Promise<string | null> {
-  const url = `https://yt.lemnoslife.com/noKey/search?part=snippet&maxResults=1&q=${encodeURIComponent(query)}`
+  const targetUrl = `https://yt.lemnoslife.com/noKey/search?part=snippet&maxResults=1&q=${encodeURIComponent(query)}`
+  const fetchUrl = isRelayAvailable()
+    ? `/api/relay?url=${encodeURIComponent(targetUrl)}`
+    : targetUrl
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), API_TIMEOUT)
   try {
-    const resp = await fetch(url, { signal: controller.signal })
+    const resp = await fetch(fetchUrl, { signal: controller.signal })
     if (!resp.ok) return null
     const data: any = await resp.json()
     const id: string | undefined = data?.items?.[0]?.id?.videoId
@@ -99,11 +104,13 @@ function extractVideoId(html: string): string | null {
 }
 
 async function scrapeSingle(url: string, proxy: string): Promise<string | null> {
-  const fullUrl = `${proxy}${encodeURIComponent(url)}`
+  const fetchUrl = isRelayAvailable()
+    ? `/api/relay?url=${encodeURIComponent(url)}`
+    : `${proxy}${encodeURIComponent(url)}`
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT)
   try {
-    const resp = await fetch(fullUrl, { signal: controller.signal })
+    const resp = await fetch(fetchUrl, { signal: controller.signal })
     if (!resp.ok) return null
     const html = await resp.text()
     if (html.length < 1000) return null

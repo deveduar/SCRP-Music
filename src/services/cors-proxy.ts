@@ -1,6 +1,11 @@
 const DEFAULT_PROXY = 'https://corsproxy.io/?'
 
 let proxyUrl = DEFAULT_PROXY
+let relayAvailable: boolean | null = null
+
+function isProduction(): boolean {
+  return typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+}
 
 export function setProxyUrl(url: string) {
   proxyUrl = url
@@ -10,7 +15,34 @@ export function getProxyUrl(): string {
   return proxyUrl
 }
 
-function proxyUrlEncode(target: string): string {
+export function isRelayAvailable(): boolean | null {
+  return relayAvailable
+}
+
+export async function checkRelayHealth(): Promise<boolean> {
+  if (!isProduction()) {
+    relayAvailable = false
+    return false
+  }
+  try {
+    const resp = await fetch('/api/relay?health=1', { signal: AbortSignal.timeout(5000) })
+    if (!resp.ok) {
+      relayAvailable = false
+      return false
+    }
+    const data = await resp.json()
+    relayAvailable = data.enabled === true
+    return relayAvailable
+  } catch {
+    relayAvailable = false
+    return false
+  }
+}
+
+function buildFetchUrl(target: string): string {
+  if (isProduction() && relayAvailable === true && !proxyUrl) {
+    return `/api/relay?url=${encodeURIComponent(target)}`
+  }
   return `${proxyUrl}${encodeURIComponent(target)}`
 }
 
@@ -29,7 +61,7 @@ export async function fetchWithProxy(url: string, signal?: AbortSignal, referer?
   const MAX_RETRIES = 3
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const resp = await fetch(proxyUrlEncode(url), { signal, headers })
+      const resp = await fetch(buildFetchUrl(url), { signal, headers })
       if (resp.ok) return resp.text()
       if (resp.status === 403 || resp.status === 429) {
         if (attempt < MAX_RETRIES) {

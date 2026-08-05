@@ -1,10 +1,11 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settings'
 import { useReleasesStore } from '../stores/releases'
 import { useUserStateStore } from '../stores/user-state'
 import { useScraperStore } from '../stores/scraper'
 import db, { exportAll, importAll } from '../storage/db'
+import { checkRelayHealth } from '../services/cors-proxy'
 
 export function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -15,6 +16,11 @@ export function Settings() {
   const [addingNew, setAddingNew] = useState(false)
   const [newAdapterName, setNewAdapterName] = useState('')
   const [newAdapterKey, setNewAdapterKey] = useState('')
+  const [relayStatus, setRelayStatus] = useState<boolean | null>(null)
+
+  useEffect(() => {
+    checkRelayHealth().then(setRelayStatus)
+  }, [])
 
   const handleAddKey = () => {
     const name = newAdapterName.trim()
@@ -122,13 +128,36 @@ export function Settings() {
 
         <div>
           <label className="text-sm font-medium text-content">CORS Proxy URL</label>
-          <p className="text-xs text-content-muted mb-2">Proxy used to bypass CORS when scraping</p>
+          <p className="text-xs text-content-muted mb-2">
+            Proxy used to bypass CORS when scraping
+          </p>
           <input
             type="text"
             value={settings.proxyUrl}
             onChange={(e) => update({ proxyUrl: e.target.value })}
+            placeholder={relayStatus ? 'Leave empty to use Vercel relay (free)' : 'Enter your CORS proxy URL'}
             className="w-full px-3 py-2 bg-surface-input border border-border-main rounded-lg text-sm text-content font-mono"
           />
+          <div className="mt-2 space-y-1">
+            {relayStatus === true && !settings.proxyUrl && (
+              <p className="text-xs text-green-400">
+                Using Vercel relay (free, managed by deployment owner)
+              </p>
+            )}
+            {relayStatus === true && settings.proxyUrl && (
+              <p className="text-xs text-amber-400">
+                Custom proxy configured — Vercel relay is available but not used
+              </p>
+            )}
+            {relayStatus === false && (
+              <p className="text-xs text-amber-400">
+                Vercel relay unavailable — configure your own proxy below
+              </p>
+            )}
+            <p className="text-xs text-content-muted">
+              Leave empty to use the built-in Vercel relay (free, rate-limited). Set a URL to use your own CORS proxy (e.g. corsproxy.io, allorigins.win, or self-hosted).
+            </p>
+          </div>
         </div>
 
         <hr className="border-border-main" />
