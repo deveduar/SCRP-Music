@@ -21,8 +21,7 @@ The relay is a Serverless Function in `api/relay.ts` that fetches content server
 | File | Purpose |
 |------|---------|
 | `api/relay.ts` | Serverless Function — proxies GET requests to target URLs |
-| `tsconfig.api.json` | TypeScript config for the `api/` folder (Node.js types) |
-| `tsconfig.json` | Updated to include `tsconfig.api.json` reference |
+| `api/tsconfig.json` | TypeScript config for Serverless Functions (Node.js types) |
 | `.env` | Local environment variables (`RELAY_ENABLED=true`) |
 | `.gitignore` | Added `.env` and `.env.local` |
 | `src/services/cors-proxy.ts` | Relay detection, fallback to user-configured proxy |
@@ -143,7 +142,7 @@ To test with relay disabled locally, set `RELAY_ENABLED=false` in `.env` and res
 
 ### TypeScript error "Cannot find name 'process'"
 
-- Ensure `tsconfig.api.json` is in `tsconfig.json` references
+- Ensure `api/tsconfig.json` exists with `"types": ["node"]`
 - Run `npm install` to ensure `@types/node` is installed
 
 ### Relay not appearing in Settings
