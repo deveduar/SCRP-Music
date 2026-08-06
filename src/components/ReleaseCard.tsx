@@ -85,7 +85,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
         {selectionMode && (
           <button
             onClick={onToggleSelection}
-            className="shrink-0 self-center w-5 h-5 flex items-center justify-center"
+            className="shrink-0 self-center w-5 h-5 flex items-center justify-center cursor-pointer"
           >
             <div className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
               checkSelected
@@ -120,7 +120,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
         <div className="min-w-0 flex-1">
           {compact ? (
             <div className="flex items-center justify-between gap-2">
-              <button onClick={handleClickRelease} className="text-left flex-1 min-w-0">
+              <button onClick={handleClickRelease} className="text-left flex-1 min-w-0 cursor-pointer">
                 <span className="block text-sm text-content truncate hover:text-accent transition-colors">
                   {compactMeta || release.title}
                 </span>
@@ -128,7 +128,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => { logAction(release.id, isFavorite ? 'unfavorited' : 'favorited'); toggleFavorite(release.id) }}
-                  className={`p-1 rounded-md transition-colors ${
+                  className={`p-1 rounded-md cursor-pointer transition-colors ${
                     isFavorite ? 'text-red-400 hover:text-red-300' : 'text-content-muted hover:text-content-secondary'
                   }`}
                   title={isFavorite ? 'Unfavorite' : 'Favorite'}
@@ -141,7 +141,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                     logAction(release.id, next === 'listened' ? 'listened' : 'unlistened')
                     setListenStatus(release.id, next)
                   }}
-                  className={`p-1 rounded-md transition-colors ${
+                  className={`p-1 rounded-md cursor-pointer transition-colors ${
                     listenStatus === 'listened' ? 'text-green-400 hover:text-green-300' : 'text-content-muted hover:text-content-secondary'
                   }`}
                   title={listenStatus === 'listened' ? 'Mark unlistened' : 'Mark listened'}
@@ -150,7 +150,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                 </button>
                 <button
                   onClick={handleToggleDetails}
-                  className="px-2 py-1 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content transition-colors"
+                  className="px-2 py-1 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content cursor-pointer transition-colors"
                 >
                   {isExpanded ? 'Hide' : 'Details'}
                 </button>
@@ -159,7 +159,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
           ) : (
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0">
-                <button onClick={handleClickRelease} className="text-left w-full min-w-0">
+                <button onClick={handleClickRelease} className="text-left w-full min-w-0 cursor-pointer">
                   <h3 className="text-sm font-medium text-content truncate hover:text-accent transition-colors">
                     {release.title}
                   </h3>
@@ -181,7 +181,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
               <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => { logAction(release.id, isFavorite ? 'unfavorited' : 'favorited'); toggleFavorite(release.id) }}
-                  className={`p-1 rounded-md transition-colors ${
+                  className={`p-1 rounded-md cursor-pointer transition-colors ${
                     isFavorite ? 'text-red-400 hover:text-red-300' : 'text-content-muted hover:text-content-secondary'
                   }`}
                   title={isFavorite ? 'Unfavorite' : 'Favorite'}
@@ -194,7 +194,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                     logAction(release.id, next === 'listened' ? 'listened' : 'unlistened')
                     setListenStatus(release.id, next)
                   }}
-                  className={`p-1 rounded-md transition-colors ${
+                  className={`p-1 rounded-md cursor-pointer transition-colors ${
                     listenStatus === 'listened' ? 'text-green-400 hover:text-green-300' : 'text-content-muted hover:text-content-secondary'
                   }`}
                   title={listenStatus === 'listened' ? 'Mark unlistened' : 'Mark listened'}
@@ -211,7 +211,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                 <button
                   key={i}
                   onClick={() => handleOpenLink(d.url, `download:${d.host}`)}
-                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content transition-colors"
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content cursor-pointer transition-colors"
                   title={d.url}
                 >
                   <Download className="w-3 h-3" />
@@ -227,7 +227,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                 <button
                   key={link.id}
                   onClick={() => handleQuickSearch(link.id)}
-                  className="text-xs px-1.5 py-0.5 bg-surface-tertiary/50 text-content-muted rounded hover:bg-surface-tertiary hover:text-content-secondary transition-colors"
+                  className="text-xs px-1.5 py-0.5 bg-surface-tertiary/50 text-content-muted rounded hover:bg-surface-tertiary hover:text-content-secondary cursor-pointer transition-colors"
                 >
                   {link.label}
                 </button>
@@ -267,7 +267,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                 )}
 
                 <div className="min-w-0 flex-1">
-                  <button onClick={handleOpenRelease} className="text-left w-full min-w-0">
+                  <button onClick={handleOpenRelease} className="text-left w-full min-w-0 cursor-pointer">
                     <h3 className="text-sm font-medium text-content hover:text-accent transition-colors">{release.title}</h3>
                   </button>
                   <p className="text-xs text-content-muted mt-0.5">
@@ -292,7 +292,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                     <button
                       key={i}
                       onClick={() => handleOpenLink(d.url, `download:${d.host}`)}
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content transition-colors"
+                      className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-surface-tertiary text-content-secondary rounded hover:bg-border-light hover:text-content cursor-pointer transition-colors"
                       title={d.url}
                     >
                       <Download className="w-3 h-3" />
@@ -307,7 +307,7 @@ export const ReleaseCard = memo(function ReleaseCard({ release, state, compact =
                   <button
                     key={link.id}
                     onClick={() => handleQuickSearch(link.id)}
-                    className="text-xs px-1.5 py-0.5 bg-surface-tertiary/50 text-content-muted rounded hover:bg-surface-tertiary hover:text-content-secondary transition-colors"
+                    className="text-xs px-1.5 py-0.5 bg-surface-tertiary/50 text-content-muted rounded hover:bg-surface-tertiary hover:text-content-secondary cursor-pointer transition-colors"
                   >
                     {link.label}
                   </button>

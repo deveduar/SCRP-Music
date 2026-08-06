@@ -77,7 +77,7 @@ export function YouTubeButton({ release }: YouTubeButtonProps) {
     <div>
       <button
         onClick={handleClick}
-        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-red-900/30 text-red-400 rounded hover:bg-red-800/40 transition-colors"
+        className="inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-btn-red-bg text-btn-red-text rounded hover:bg-btn-red-hover cursor-pointer transition-colors"
         title="Search and play on YouTube"
       >
         {state === 'loading' ? (

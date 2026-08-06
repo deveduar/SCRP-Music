@@ -28,12 +28,12 @@ export function History() {
     switch (action) {
       case 'opened': return 'bg-accent/20 text-accent'
       case 'favorited':
-      case 'unfavorited': return 'bg-red-900/30 text-red-400'
+      case 'unfavorited': return 'bg-chip-red-bg text-chip-red-text'
       case 'listened':
-      case 'unlistened': return 'bg-green-900/30 text-green-400'
-      case 'scrape_completed': return 'bg-blue-900/30 text-blue-400'
-      case 'page_detected': return 'bg-cyan-900/30 text-cyan-400'
-      case 'batch_action': return 'bg-purple-900/30 text-purple-400'
+      case 'unlistened': return 'bg-chip-green-bg text-chip-green-text'
+      case 'scrape_completed': return 'bg-chip-blue-bg text-chip-blue-text'
+      case 'page_detected': return 'bg-chip-cyan-bg text-chip-cyan-text'
+      case 'batch_action': return 'bg-chip-purple-bg text-chip-purple-text'
       default: return 'bg-surface-tertiary text-content-muted'
     }
   }

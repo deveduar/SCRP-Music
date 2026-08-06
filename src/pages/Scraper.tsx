@@ -510,12 +510,12 @@ export function Scraper() {
             </div>
             <div className="space-y-1.5 max-h-60 overflow-auto">
               {jobs.slice(0, 20).map((job) => (
-                <div key={job.id} className="flex items-center gap-2 text-xs px-2 py-1.5 bg-surface-secondary rounded">
+                <div key={job.id} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs px-2 py-1.5 bg-surface-secondary rounded">
                   <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${
                     job.status === 'completed' ? 'bg-green-400' : 'bg-red-400'
                   }`} />
                   <span className="font-medium text-content-secondary truncate max-w-[120px]">{job.genre.label}</span>
-                  <span className="text-[10px] text-cyan-500/70 shrink-0">{job.adapterName}</span>
+                  <span className="text-[10px] text-cyan-500/70">{job.adapterName}</span>
                   <span className="text-content-muted">pages {job.startPage}-{job.endPage}</span>
                   <span className="text-content-muted">—</span>
                   <span className="text-content-secondary">{job.totalReleases} releases</span>

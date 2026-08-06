@@ -15,6 +15,40 @@
   --color-border-light: var(--border-light);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-btn-red-bg: var(--btn-red-bg);
+  --color-btn-red-text: var(--btn-red-text);
+  --color-btn-red-hover: var(--btn-red-hover);
+  --color-chip-red-bg: var(--chip-red-bg);
+  --color-chip-red-text: var(--chip-red-text);
+  --color-chip-green-bg: var(--chip-green-bg);
+  --color-chip-green-text: var(--chip-green-text);
+  --color-chip-blue-bg: var(--chip-blue-bg);
+  --color-chip-blue-text: var(--chip-blue-text);
+  --color-chip-cyan-bg: var(--chip-cyan-bg);
+  --color-chip-cyan-text: var(--chip-cyan-text);
+  --color-chip-purple-bg: var(--chip-purple-bg);
+  --color-chip-purple-text: var(--chip-purple-text);
+  --color-btn-red-bg: var(--btn-red-bg);
+  --color-btn-red-text: var(--btn-red-text);
+  --color-btn-red-hover: var(--btn-red-hover);
+  --color-btn-red-bg: var(--btn-red-bg);
+  --color-btn-red-text: var(--btn-red-text);
+  --color-btn-red-hover: var(--btn-red-hover);
+  --color-btn-danger-bg: var(--btn-danger-bg);
+  --color-btn-danger-text: var(--btn-danger-text);
+  --color-btn-danger-hover: var(--btn-danger-hover);
+  --color-btn-amber-bg: var(--btn-amber-bg);
+  --color-btn-amber-text: var(--btn-amber-text);
+  --color-btn-amber-hover: var(--btn-amber-hover);
+  --color-btn-cyan-bg: var(--btn-cyan-bg);
+  --color-btn-cyan-text: var(--btn-cyan-text);
+  --color-btn-cyan-hover: var(--btn-cyan-hover);
+  --color-btn-blue-bg: var(--btn-blue-bg);
+  --color-btn-blue-text: var(--btn-blue-text);
+  --color-btn-blue-hover: var(--btn-blue-hover);
+  --color-btn-green-bg: var(--btn-green-bg);
+  --color-btn-green-text: var(--btn-green-text);
+  --color-btn-green-hover: var(--btn-green-hover);
 }
 
 :root,
@@ -33,6 +67,34 @@
   --border-light: #3f3f46;
   --accent: #3b82f6;
   --accent-hover: #2563eb;
+  --btn-red-bg: rgba(127, 29, 29, 0.3);
+  --btn-red-text: #f87171;
+  --btn-red-hover: rgba(153, 27, 27, 0.4);
+  --chip-red-bg: rgba(127, 29, 29, 0.3);
+  --chip-red-text: #f87171;
+  --chip-green-bg: rgba(21, 128, 61, 0.3);
+  --chip-green-text: #4ade80;
+  --chip-blue-bg: rgba(30, 64, 175, 0.3);
+  --chip-blue-text: #60a5fa;
+  --chip-cyan-bg: rgba(21, 94, 117, 0.3);
+  --chip-cyan-text: #22d3ee;
+  --chip-purple-bg: rgba(88, 28, 135, 0.3);
+  --chip-purple-text: #c084fc;
+  --btn-danger-bg: rgba(127, 29, 29, 0.3);
+  --btn-danger-text: #f87171;
+  --btn-danger-hover: rgba(153, 27, 27, 0.4);
+  --btn-amber-bg: rgba(120, 53, 15, 0.3);
+  --btn-amber-text: #fbbf24;
+  --btn-amber-hover: rgba(146, 64, 14, 0.4);
+  --btn-cyan-bg: rgba(21, 94, 117, 0.3);
+  --btn-cyan-text: #22d3ee;
+  --btn-cyan-hover: rgba(21, 94, 117, 0.4);
+  --btn-blue-bg: rgba(30, 64, 175, 0.3);
+  --btn-blue-text: #60a5fa;
+  --btn-blue-hover: rgba(37, 99, 235, 0.4);
+  --btn-green-bg: rgba(21, 128, 61, 0.3);
+  --btn-green-text: #4ade80;
+  --btn-green-hover: rgba(22, 163, 74, 0.4);
 }
 
 [data-theme="light"] {
@@ -50,6 +112,34 @@
   --border-light: #d4d4d8;
   --accent: #2563eb;
   --accent-hover: #1d4ed8;
+  --btn-red-bg: rgba(185, 28, 28, 0.1);
+  --btn-red-text: #dc2626;
+  --btn-red-hover: rgba(185, 28, 28, 0.2);
+  --chip-red-bg: rgba(185, 28, 28, 0.1);
+  --chip-red-text: #dc2626;
+  --chip-green-bg: rgba(21, 128, 61, 0.1);
+  --chip-green-text: #16a34a;
+  --chip-blue-bg: rgba(30, 64, 175, 0.1);
+  --chip-blue-text: #2563eb;
+  --chip-cyan-bg: rgba(21, 94, 117, 0.1);
+  --chip-cyan-text: #0891b2;
+  --chip-purple-bg: rgba(88, 28, 135, 0.1);
+  --chip-purple-text: #9333ea;
+  --btn-danger-bg: rgba(185, 28, 28, 0.1);
+  --btn-danger-text: #dc2626;
+  --btn-danger-hover: rgba(185, 28, 28, 0.2);
+  --btn-amber-bg: rgba(180, 83, 9, 0.1);
+  --btn-amber-text: #d97706;
+  --btn-amber-hover: rgba(180, 83, 9, 0.2);
+  --btn-cyan-bg: rgba(21, 94, 117, 0.1);
+  --btn-cyan-text: #0891b2;
+  --btn-cyan-hover: rgba(21, 94, 117, 0.2);
+  --btn-blue-bg: rgba(30, 64, 175, 0.1);
+  --btn-blue-text: #2563eb;
+  --btn-blue-hover: rgba(30, 64, 175, 0.2);
+  --btn-green-bg: rgba(21, 128, 61, 0.1);
+  --btn-green-text: #16a34a;
+  --btn-green-hover: rgba(21, 128, 61, 0.2);
 }
 
 html, body, #root {

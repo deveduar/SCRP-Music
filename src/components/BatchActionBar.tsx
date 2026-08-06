@@ -357,7 +357,7 @@ export function BatchActionBar({
   return (
     <div className="flex flex-col w-full bg-surface border-b border-border-main shadow-sm min-h-28">
       {/* Row 1: Main controls */}
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-3 w-full">
+      <div className="flex flex-wrap items-center gap-2 px-3 lg:px-4 py-3 w-full">
         {/* Left: Close and Count/Selection */}
         <div className="flex items-center gap-3 pr-3 border-r border-border-main shrink-0">
           <button
@@ -389,7 +389,7 @@ export function BatchActionBar({
         </div>
 
         {/* Center: Dynamic controls */}
-        <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className="text-xs text-content-muted font-medium shrink-0">Action:</span>
             <select
@@ -471,7 +471,7 @@ export function BatchActionBar({
       </div>
       
       {/* Row 2: Selection controls */}
-      <div className="flex items-center gap-3 px-3 lg:px-4 py-1.5 border-t border-border-main/50 w-full">
+      <div className="flex flex-wrap items-center gap-2 px-3 lg:px-4 py-1.5 border-t border-border-main/50 w-full">
         <div className="flex items-center gap-2">
           {!selectionMode ? (
             <div className="flex items-center gap-2">

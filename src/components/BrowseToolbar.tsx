@@ -81,26 +81,26 @@ export function BrowseToolbar({ compactView, onToggleCompactView, onLoadJson, on
   return (
     <div className="flex flex-col border-b border-border-main bg-surface shadow-sm min-h-28">
       {/* Top Row: Search & Essentials */}
-      <div className="flex items-center gap-3 p-3 lg:px-4 lg:py-3">
+      <div className="flex flex-wrap items-center gap-2 p-3 lg:px-4 lg:py-3">
         <button
           onClick={() => setManualBatchMode(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm font-medium"
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm font-medium"
         >
           <ListChecks className="w-4 h-4" />
         </button>
-        <div className="max-w-xs w-72">
+        <div className="min-w-0 flex-1 min-w-[180px] max-w-xs">
           <SearchBar />
         </div>
         <SortControls />
         <button
           onClick={onToggleCompactView}
-          className="px-3 py-1.5 text-xs bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm"
+          className="shrink-0 px-3 py-1.5 text-xs bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm whitespace-nowrap"
         >
           {compactView ? 'Full view' : 'Compact view'}
         </button>
         <button
           onClick={onLoadJson}
-          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors"
+          className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors whitespace-nowrap"
         >
           Load JSON
         </button>
