@@ -4,7 +4,7 @@ import { useScraperStore } from '../stores/scraper'
 import { SearchBar } from './SearchBar'
 import { SortControls } from './SortControls'
 import { BatchActionBar } from './BatchActionBar'
-import { ListChecks, Circle, CheckCircle, Heart } from 'lucide-react'
+import { ListChecks, Circle, CheckCircle, Heart, LayoutGrid, LayoutList, Upload } from 'lucide-react'
 import { SelectPill } from './SelectPill'
 
 function Pill({ active, onClick, children }: { active: boolean, onClick: () => void, children: React.ReactNode }) {
@@ -79,7 +79,7 @@ export function BrowseToolbar({ compactView, onToggleCompactView, onLoadJson, on
   }
 
   return (
-    <div className="flex flex-col border-b border-border-main bg-surface shadow-sm min-h-28">
+    <div className="flex flex-col border-b border-border-main bg-surface shadow-sm min-h-24">
       {/* Top Row: Search & Essentials */}
       <div className="flex flex-wrap items-center gap-2 p-3 lg:px-4 lg:py-3">
         <button
@@ -94,15 +94,16 @@ export function BrowseToolbar({ compactView, onToggleCompactView, onLoadJson, on
         <SortControls />
         <button
           onClick={onToggleCompactView}
-          className="shrink-0 px-3 py-1.5 text-xs bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm whitespace-nowrap"
+          className="shrink-0 p-1.5 bg-surface-input border border-border-main text-content-secondary rounded-lg hover:bg-surface-tertiary hover:text-content transition-colors shadow-sm"
+          title={compactView ? 'Full view' : 'Compact view'}
         >
-          {compactView ? 'Full view' : 'Compact view'}
+          {compactView ? <LayoutList className="w-4 h-4" /> : <LayoutGrid className="w-4 h-4" />}
         </button>
         <button
           onClick={onLoadJson}
-          className="ml-auto shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors whitespace-nowrap"
+          className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-xs bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors"
         >
-          Load JSON
+          <Upload className="w-4 h-4" />
         </button>
       </div>
 
