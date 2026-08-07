@@ -2,6 +2,8 @@ import { useRef, useEffect, useState } from 'react'
 import { useScraperStore } from '../stores/scraper'
 import { useReleasesStore } from '../stores/releases'
 import { useSettingsStore } from '../stores/settings'
+import { useNetworkStore } from '../stores/network'
+import { getFetchInfo } from '../services/fetch-info'
 import type { Genre } from '../types/scraper'
 import {
   Play,
@@ -54,11 +56,17 @@ export function Scraper() {
 
   const loadReleases = useReleasesStore((s) => s.loadReleases)
   const proxyUrl = useSettingsStore((s) => s.settings.proxyUrl)
+  const network = useNetworkStore()
 
   const genres: Genre[] = adapter?.getGenres() ?? []
   const adapterIds = Object.keys(adapters)
   const isApiAdapter = adapter?.kind === 'api'
   const supportsFastSkipExisting = adapter?.supportsFastSkipExisting === true
+
+  const activeId = activeAdapterId ?? adapter?.id ?? ''
+  const fetchInfo = activeId
+    ? getFetchInfo(activeId, { env: network.env, relayAvailable: network.relayAvailable, proxyUrl })
+    : null
 
   const [genreId, setGenreId] = useState('')
   const [startPage, setStartPage] = useState(1)
@@ -175,6 +183,26 @@ export function Scraper() {
                 <option key={id} value={id}>{adapters[id].name}</option>
               ))}
             </select>
+          </div>
+        )}
+        {fetchInfo && (
+          <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+            <span className="text-content-muted">Transport:</span>
+            <span
+              className={`px-2 py-0.5 rounded-full font-medium border ${
+                fetchInfo.warning
+                  ? 'bg-red-500/10 text-red-400 border-red-500/30'
+                  : fetchInfo.kind === 'direct'
+                  ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
+                  : 'bg-green-500/10 text-green-400 border-green-500/30'
+              }`}
+            >
+              {fetchInfo.label}
+            </span>
+            <span className="text-content-muted" title={fetchInfo.detail}>{fetchInfo.detail}</span>
+            {fetchInfo.warning && (
+              <span className="text-red-400">{fetchInfo.warning}</span>
+            )}
           </div>
         )}
         {isApiAdapter ? (

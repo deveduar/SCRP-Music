@@ -309,6 +309,38 @@ async function detectMaxPagesBinarySearch(
   return low
 }
 
+async function detectMaxPagesFromFirstPageHtml(
+  def: AdapterDefinition,
+  fetchFn: (url: string, signal?: AbortSignal) => Promise<string>,
+  genreId: string,
+  cacheKey: string,
+  signal?: AbortSignal,
+  query?: string,
+): Promise<number> {
+  const cached = loadPageLimitCache(cacheKey)
+  if (cached[genreId]) return cached[genreId].maxPage
+
+  try {
+    const url = buildPageUrl(def, genreId, 1, query)
+    const html = await fetchFn(url, signal)
+    const regex = new RegExp(def.pagination.lastPageRegex || 'page/([0-9]+)/', 'gi')
+    let maxPage = 1
+    for (const m of html.matchAll(regex)) {
+      const n = Number(m[1])
+      if (Number.isFinite(n) && n > maxPage) maxPage = n
+    }
+    maxPage = Math.min(maxPage, def.pagination.maxPagesCap || 5000)
+
+    savePageLimitCache(cacheKey, {
+      ...loadPageLimitCache(cacheKey),
+      [genreId]: { maxPage, detectedAt: new Date().toISOString() },
+    })
+    return maxPage
+  } catch {
+    return detectMaxPagesBinarySearch(def, fetchFn, genreId, cacheKey, signal)
+  }
+}
+
 async function detectMaxPagesApiCount(
   def: AdapterDefinition,
   fetchFn: (url: string, signal?: AbortSignal) => Promise<string>,
@@ -350,19 +382,27 @@ async function detectMaxPagesApiCount(
 
 function buildPageUrl(def: AdapterDefinition, genreId: string, page: number, query?: string): string {
   const isPageNumber = def.urlTemplates.page.includes('{page}')
+  const genrePath = resolveGenrePath(def, genreId)
   let url = def.urlTemplates.page
     .replace('{page}', String(page))
     .replace('{genreId}', genreId)
     .replace('{query}', encodeURIComponent(query || ''))
+    .replace('{path}', genrePath)
 
   if (def.urlTemplates.firstPage && page === 1) {
-    let firstPage = def.urlTemplates.firstPage.replace('{genreId}', genreId).replace('{query}', encodeURIComponent(query || ''))
+    let firstPage = def.urlTemplates.firstPage
+      .replace('{genreId}', genreId)
+      .replace('{query}', encodeURIComponent(query || ''))
+      .replace('{path}', genrePath)
     if (!firstPage.startsWith('http')) firstPage = def.baseUrl + firstPage
     return firstPage
   }
 
   if (isPageNumber && page === 1 && def.urlTemplates.firstPage) {
-    let firstPage = def.urlTemplates.firstPage.replace('{genreId}', genreId).replace('{query}', encodeURIComponent(query || ''))
+    let firstPage = def.urlTemplates.firstPage
+      .replace('{genreId}', genreId)
+      .replace('{query}', encodeURIComponent(query || ''))
+      .replace('{path}', genrePath)
     if (!firstPage.startsWith('http')) firstPage = def.baseUrl + firstPage
     return firstPage
   }
@@ -373,12 +413,14 @@ function buildPageUrl(def: AdapterDefinition, genreId: string, page: number, que
 
 function buildApiUrl(def: AdapterDefinition, genreId: string, page: number, apiKey?: string, query?: string): string {
   const offset = (page - 1) * def.pagination.pageSize
+  const genrePath = resolveGenrePath(def, genreId)
   let url = def.urlTemplates.page
     .replace('{page}', String(page))
     .replace('{offset}', String(offset))
     .replace('{genreId}', genreId)
     .replace('{pageSize}', String(def.pagination.pageSize))
     .replace('{query}', encodeURIComponent(query || ''))
+    .replace('{path}', genrePath)
 
   if (apiKey && def.api?.apiKeyParamName) {
     const separator = url.includes('?') ? '&' : '?'
@@ -398,6 +440,11 @@ function slugify(label: string): string {
     .normalize('NFKD')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '')
+}
+
+function resolveGenrePath(def: AdapterDefinition, genreId: string): string {
+  const items = def.genres.items || def.genres.fallbackItems || []
+  return items.find(g => g.id === genreId)?.path || ''
 }
 
 export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
@@ -471,6 +518,10 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
 
       if (def.pagination.detection === 'binary-search') {
         return detectMaxPagesBinarySearch(def, fetchFn, genreId, cacheKey, signal)
+      }
+
+      if (def.pagination.detection === 'html-last-page') {
+        return detectMaxPagesFromFirstPageHtml(def, fetchFn, genreId, cacheKey, signal, query)
       }
 
       if (def.pagination.detection === 'api-count') {

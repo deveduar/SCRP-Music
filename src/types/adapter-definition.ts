@@ -53,11 +53,12 @@ export interface AdapterDefinition {
   }
 
   pagination: {
-    detection: 'api-count' | 'binary-search' | 'client-side'
+    detection: 'api-count' | 'binary-search' | 'client-side' | 'html-last-page'
     mode: 'page-number' | 'offset' | 'client-side'
     pageSize: number
     maxPagesCap?: number
     countFieldPath?: string
+    lastPageRegex?: string
   }
 
   scrapeMode: 'single-pass' | 'two-phase'

@@ -1,0 +1,80 @@
+{
+  "version": "1.0",
+  "id": "incompetech",
+  "name": "Incompetech",
+  "description": "Royalty-free music by Kevin MacLeod",
+  "kind": "api",
+  "baseUrl": "https://incompetech.com",
+
+  "fetch": {
+    "mode": "proxy"
+  },
+
+  "genres": {
+    "source": "dynamic",
+    "dynamicUrl": "https://incompetech.com/music/royalty-free/music.html",
+    "dynamicRegex": "\"id\"\\s*:\\s*(\\d+)\\s*,\\s*\"genre\"\\s*:\\s*\"([^\"]+)\"",
+    "fallbackItems": [
+      { "id": "all", "label": "All genres", "path": "" },
+      { "id": "african", "label": "African", "path": "" },
+      { "id": "blues", "label": "Blues", "path": "" },
+      { "id": "classical", "label": "Classical", "path": "" },
+      { "id": "contemporary", "label": "Contemporary", "path": "" },
+      { "id": "disco", "label": "Disco", "path": "" },
+      { "id": "electronica", "label": "Electronica", "path": "" },
+      { "id": "funk", "label": "Funk", "path": "" },
+      { "id": "holiday", "label": "Holiday", "path": "" },
+      { "id": "horror", "label": "Horror", "path": "" },
+      { "id": "jazz", "label": "Jazz", "path": "" },
+      { "id": "latin", "label": "Latin", "path": "" },
+      { "id": "modern", "label": "Modern", "path": "" },
+      { "id": "musical", "label": "Musical", "path": "" },
+      { "id": "polka", "label": "Polka", "path": "" },
+      { "id": "pop", "label": "Pop", "path": "" },
+      { "id": "reggae", "label": "Reggae", "path": "" },
+      { "id": "rock", "label": "Rock", "path": "" },
+      { "id": "silent-film-score", "label": "Silent Film Score", "path": "" },
+      { "id": "ska", "label": "Ska", "path": "" },
+      { "id": "soundtrack", "label": "Soundtrack", "path": "" },
+      { "id": "stings", "label": "Stings", "path": "" },
+      { "id": "unclassifiable", "label": "Unclassifiable", "path": "" },
+      { "id": "world", "label": "World", "path": "" },
+      { "id": "urban", "label": "Urban", "path": "" }
+    ]
+  },
+
+  "pagination": {
+    "detection": "client-side",
+    "mode": "client-side",
+    "pageSize": 20
+  },
+
+  "scrapeMode": "single-pass",
+
+  "urlTemplates": {
+    "page": "https://incompetech.com/music/royalty-free/pieces.json",
+    "search": "https://incompetech.com/music/royalty-free/pieces.json"
+  },
+
+  "fieldMapping": {
+    "id": { "from": "sha1", "source": "composite", "compositeFields": ["uuid", "title", "filename"] },
+    "title": { "from": "apiField", "field": "title" },
+    "catalog": { "from": "apiField", "field": "isrc" },
+    "year": { "from": "substr", "source": "uploaded", "start": 0, "end": 4 },
+    "genre": { "from": "apiField", "field": "genre" },
+    "subgenres": { "from": "split", "fields": ["feel", "instruments"] },
+    "urlRelease": { "from": "hardcoded", "value": "https://incompetech.com/music/royalty-free/music.html" },
+    "downloads": {
+      "urlTemplate": "https://incompetech.com/music/royalty-free/mp3-royaltyfree/{encode:filename}",
+      "hostStatic": "Incompetech"
+    }
+  },
+
+  "hardcodedFields": {
+    "source": "incompetech",
+    "artists": ["Kevin MacLeod"],
+    "album": "Royalty-Free Music",
+    "label": "Incompetech",
+    "coverUrl": null
+  }
+}

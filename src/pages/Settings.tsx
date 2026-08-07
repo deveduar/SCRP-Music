@@ -1,11 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { Eye, EyeOff } from 'lucide-react'
 import { useSettingsStore } from '../stores/settings'
 import { useReleasesStore } from '../stores/releases'
 import { useUserStateStore } from '../stores/user-state'
 import { useScraperStore } from '../stores/scraper'
 import db, { exportAll, importAll } from '../storage/db'
-import { checkRelayHealth } from '../services/cors-proxy'
+import { getFetchInfo } from '../services/fetch-info'
+import { useNetworkStore } from '../stores/network'
 
 export function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -16,11 +17,8 @@ export function Settings() {
   const [addingNew, setAddingNew] = useState(false)
   const [newAdapterName, setNewAdapterName] = useState('')
   const [newAdapterKey, setNewAdapterKey] = useState('')
-  const [relayStatus, setRelayStatus] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    checkRelayHealth().then(setRelayStatus)
-  }, [])
+  const network = useNetworkStore()
+  const loadedAdapters = useScraperStore((s) => s.adapters)
 
   const handleAddKey = () => {
     const name = newAdapterName.trim()
@@ -132,7 +130,21 @@ export function Settings() {
 
       {/* CORS Proxy */}
       <div className="bg-surface-card border border-border-main rounded-lg p-4">
-        <h3 className="text-sm font-semibold text-content mb-3">CORS Proxy</h3>
+        <div className="flex items-center gap-2 mb-3">
+          <h3 className="text-sm font-semibold text-content">CORS Proxy</h3>
+          <span
+            className={`ml-auto text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full ${
+              network.env === 'prod'
+                ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                : 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
+            }`}
+          >
+            {network.env === 'prod' ? 'Prod' : 'Dev'}
+            {network.env === 'prod'
+              ? ' (Vercel)'
+              : ' (localhost)'}
+          </span>
+        </div>
         <label className="text-sm font-medium text-content">Proxy URL</label>
         <p className="text-xs text-content-muted mb-2">
           Proxy used to bypass CORS when scraping
@@ -141,28 +153,60 @@ export function Settings() {
           type="text"
           value={settings.proxyUrl}
           onChange={(e) => update({ proxyUrl: e.target.value })}
-          placeholder={relayStatus ? 'Leave empty to use Vercel relay (free)' : 'Enter your CORS proxy URL'}
+          placeholder={network.relayAvailable ? 'Leave empty to use the relay (free)' : 'Enter your CORS proxy URL'}
           className="w-full px-3 py-2 bg-surface-input border border-border-main rounded-lg text-sm text-content font-mono"
         />
         <div className="mt-2 space-y-1">
-          {relayStatus === true && !settings.proxyUrl && (
+          {network.checking && network.relayAvailable === null && (
+            <p className="text-xs text-content-muted">Checking relay status…</p>
+          )}
+          {network.relayAvailable === true && !settings.proxyUrl && (
             <p className="text-xs text-green-400">
-              Using Vercel relay (free, managed by deployment owner)
+              {network.env === 'prod'
+                ? 'Using Vercel relay (free, managed by deployment owner)'
+                : 'Using local relay (Vite dev middleware)'}
             </p>
           )}
-          {relayStatus === true && settings.proxyUrl && (
+          {network.relayAvailable === true && settings.proxyUrl && (
             <p className="text-xs text-amber-400">
-              Custom proxy configured — Vercel relay is available but not used
+              Custom proxy configured — relay is available but not used
             </p>
           )}
-          {relayStatus === false && (
+          {network.relayAvailable === false && (
             <p className="text-xs text-amber-400">
-              Vercel relay unavailable — configure your own proxy below
+              Relay unavailable — configure your own proxy below
             </p>
           )}
           <p className="text-xs text-content-muted">
-            Leave empty to use the built-in Vercel relay (free, rate-limited). Set a URL to use your own CORS proxy (e.g. corsproxy.io, allorigins.win, or self-hosted).
+            Leave empty to use the built-in relay ({network.env === 'prod' ? 'Vercel serverless, free, rate-limited' : 'Vite dev middleware'}). Set a URL to use your own CORS proxy (e.g. corsproxy.io, allorigins.win, or self-hosted).
           </p>
+        </div>
+
+        <div className="mt-4">
+          <p className="text-sm font-medium text-content mb-2">Active transport per source</p>
+          <div className="space-y-1.5">
+            {Object.keys(loadedAdapters).map((id) => {
+              const info = getFetchInfo(id, {
+                env: network.env,
+                relayAvailable: network.relayAvailable,
+                proxyUrl: settings.proxyUrl,
+              })
+              return (
+                <div key={id} className="text-xs px-2.5 py-1.5 bg-surface-secondary rounded flex items-center gap-2">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      info.warning ? 'bg-red-400' : info.kind === 'direct' ? 'bg-cyan-400' : 'bg-green-400'
+                    }`}
+                  />
+                  <span className="font-medium text-content-secondary min-w-0 truncate">{loadedAdapters[id].name}</span>
+                  <span className="text-content-muted shrink-0">{info.label}</span>
+                  <span className="text-content-muted ml-auto shrink-0 hidden sm:block" title={info.detail}>
+                    {info.detail}
+                  </span>
+                </div>
+              )
+            })}
+          </div>
         </div>
       </div>
 

@@ -32,10 +32,16 @@ docs/
 local_adapters/*
 !local_adapters/incompetech-adapter.ts
 !local_adapters/incompetech-README.md
+!local_adapters/incompetech.json
+
 !local_adapters/internet-archive-adapter.ts
 !local_adapters/internet-archive-README.md
+!local_adapters/internet-archive.json
+
 !local_adapters/jamendo-adapter.ts
 !local_adapters/jamendo-README.md
+!local_adapters/jamendo.json
+
 !local_adapters/README.md    
 !local_adapters/shared.ts
 

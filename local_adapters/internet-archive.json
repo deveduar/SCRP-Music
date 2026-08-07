@@ -1,0 +1,62 @@
+{
+  "version": "1.0",
+  "id": "internetarchive",
+  "name": "Internet Archive",
+  "description": "Audio from Internet Archive with filtered search results",
+  "kind": "api",
+  "baseUrl": "https://archive.org",
+  "fetch": {
+    "mode": "proxy"
+  },
+  "genres": {
+    "source": "hardcoded",
+    "items": [
+      { "id": "all", "label": "All genres", "path": "/search", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025]" },
+      { "id": "rock", "label": "Rock", "path": "/search?subject=rock", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"rock\"" },
+      { "id": "jazz", "label": "Jazz", "path": "/search?subject=jazz", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"jazz\"" },
+      { "id": "classical", "label": "Classical", "path": "/search?subject=classical", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"classical\"" },
+      { "id": "folk", "label": "Folk", "path": "/search?subject=folk", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"folk\"" },
+      { "id": "blues", "label": "Blues", "path": "/search?subject=blues", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"blues\"" },
+      { "id": "country", "label": "Country", "path": "/search?subject=country", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"country\"" },
+      { "id": "electronic", "label": "Electronic", "path": "/search?subject=electronic", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"electronic\"" },
+      { "id": "ambient", "label": "Ambient", "path": "/search?subject=ambient", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"ambient\"" },
+      { "id": "world", "label": "World", "path": "/search?subject=world", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"world\"" },
+      { "id": "reggae", "label": "Reggae", "path": "/search?subject=reggae", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"reggae\"" },
+      { "id": "soul", "label": "Soul", "path": "/search?subject=soul", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"soul\"" },
+      { "id": "funk", "label": "Funk", "path": "/search?subject=funk", "query": "(collection:etree OR collection:audio_music) AND mediatype:audio AND year:[1900 TO 2025] AND subject:\"funk\"" }
+    ]
+  },
+  "pagination": {
+    "detection": "api-count",
+    "mode": "page-number",
+    "pageSize": 50
+  },
+  "scrapeMode": "single-pass",
+  "api": {
+    "resultsPath": "response.docs",
+    "countFieldPath": "response.numFound"
+  },
+  "urlTemplates": {
+    "page": "/advancedsearch.php?q={query}&fl[]=identifier&fl[]=title&fl[]=creator&fl[]=year&fl[]=subject&fl[]=publisher&rows={pageSize}&page={page}&output=json"
+  },
+  "fieldMapping": {
+    "id": { "from": "sha1", "source": "identifier" },
+    "title": { "from": "apiField", "field": "title" },
+    "artists": { "from": "apiField", "field": "creator" },
+    "album": { "from": "apiField", "field": "title" },
+    "label": { "from": "apiField", "field": "publisher" },
+    "catalog": { "from": "apiField", "field": "identifier" },
+    "year": { "from": "apiField", "field": "year" },
+    "genre": { "from": "hardcoded", "value": "" },
+    "subgenres": { "from": "split", "fields": ["subject"] },
+    "coverUrl": { "from": "concat", "template": "{0}/services/img/{1}", "fields": ["baseUrl", "identifier"] },
+    "urlRelease": { "from": "concat", "template": "{0}/details/{1}", "fields": ["baseUrl", "identifier"] },
+    "downloads": {
+      "urlTemplate": "{baseUrl}/download/{identifier}",
+      "hostStatic": "Internet Archive"
+    }
+  },
+  "hardcodedFields": {
+    "source": "internetarchive"
+  }
+}

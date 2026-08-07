@@ -1,0 +1,82 @@
+{
+  "version": "1.0",
+  "id": "jamendo",
+  "name": "Jamendo",
+  "description": "Creative Commons music from Jamendo",
+  "kind": "api",
+  "baseUrl": "https://www.jamendo.com",
+  "fetch": {
+    "mode": "direct",
+    "timeout": 30000,
+    "headers": { "Accept": "application/json" }
+  },
+  "genres": {
+    "source": "hardcoded",
+    "items": [
+      { "id": "rock", "label": "Rock", "path": "/en/album/rock" },
+      { "id": "pop", "label": "Pop", "path": "/en/album/pop" },
+      { "id": "electronic", "label": "Electronic", "path": "/en/album/electronic" },
+      { "id": "hiphop", "label": "Hip-Hop", "path": "/en/album/hiphop" },
+      { "id": "jazz", "label": "Jazz", "path": "/en/album/jazz" },
+      { "id": "indie", "label": "Indie", "path": "/en/album/indie" },
+      { "id": "filmscore", "label": "Film Score", "path": "/en/album/filmscore" },
+      { "id": "classical", "label": "Classical", "path": "/en/album/classical" },
+      { "id": "chillout", "label": "Chillout", "path": "/en/album/chillout" },
+      { "id": "ambient", "label": "Ambient", "path": "/en/album/ambient" },
+      { "id": "folk", "label": "Folk", "path": "/en/album/folk" },
+      { "id": "metal", "label": "Metal", "path": "/en/album/metal" },
+      { "id": "latin", "label": "Latin", "path": "/en/album/latin" },
+      { "id": "rnb", "label": "RnB", "path": "/en/album/rnb" },
+      { "id": "reggae", "label": "Reggae", "path": "/en/album/reggae" },
+      { "id": "punk", "label": "Punk", "path": "/en/album/punk" },
+      { "id": "country", "label": "Country", "path": "/en/album/country" },
+      { "id": "house", "label": "House", "path": "/en/album/house" },
+      { "id": "blues", "label": "Blues", "path": "/en/album/blues" },
+      { "id": "techno", "label": "Techno", "path": "/en/album/techno" },
+      { "id": "trance", "label": "Trance", "path": "/en/album/trance" },
+      { "id": "dnb", "label": "Drum & Bass", "path": "/en/album/dnb" }
+    ]
+  },
+  "pagination": {
+    "detection": "api-count",
+    "mode": "offset",
+    "pageSize": 200
+  },
+  "scrapeMode": "single-pass",
+  "api": {
+    "countUrlTemplate": "https://api.jamendo.com/v3.0/tracks?format=json&limit=1&tags={genreId}&groupby=album_id&fullcount=true",
+    "resultsPath": "results",
+    "countFieldPath": "headers.results_fullcount",
+    "statusFieldPath": "headers.status",
+    "statusSuccessValue": "success",
+    "errorMessagePath": "headers.error_message",
+    "apiKeyRequired": true,
+    "apiKeyField": "jamendo",
+    "apiKeyParamName": "client_id",
+    "errorTranslations": [
+      { "pattern": "internal error", "message": "Género no disponible en Jamendo. Elige otro de la lista." }
+    ]
+  },
+  "urlTemplates": {
+    "page": "https://api.jamendo.com/v3.0/tracks?format=json&limit={pageSize}&offset={offset}&tags={genreId}&groupby=album_id&fullcount=true"
+  },
+  "fieldMapping": {
+    "id": { "from": "sha1", "source": "composite", "compositeFields": ["album_id"] },
+    "title": { "from": "apiField", "field": "album_name" },
+    "artists": { "from": "apiField", "field": "artist_name" },
+    "album": { "from": "apiField", "field": "album_name" },
+    "label": { "from": "hardcoded", "value": "" },
+    "catalog": { "from": "hardcoded", "value": "" },
+    "year": { "from": "substr", "source": "releasedate", "start": 0, "end": 4 },
+    "genre": { "from": "hardcoded", "value": "" },
+    "coverUrl": { "from": "apiField", "field": "album_image" },
+    "urlRelease": { "from": "concat", "template": "https://www.jamendo.com/list/a{0}", "fields": ["album_id"] },
+    "downloads": {
+      "urlTemplate": "{audiodownload}",
+      "hostStatic": "Jamendo"
+    }
+  },
+  "hardcodedFields": {
+    "source": "jamendo"
+  }
+}

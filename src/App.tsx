@@ -12,9 +12,10 @@ import { useReleasesStore } from './stores/releases'
 import { useUserStateStore } from './stores/user-state'
 import { useScraperStore } from './stores/scraper'
 import { useSettingsStore } from './stores/settings'
-import { setProxyUrl, checkRelayHealth } from './services/cors-proxy'
+import { setProxyUrl } from './services/cors-proxy'
 import { adapterDefinitions } from './services/adapter-definitions'
 import { createAdapterFromDef } from './services/adapter-engine'
+import { useNetworkStore } from './stores/network'
 
 const adapterModules = import.meta.glob('../local_adapters/*-adapter.ts')
 
@@ -68,7 +69,7 @@ function DataInit({ children }: { children: React.ReactNode }) {
       setProxyUrl(useSettingsStore.getState().settings.proxyUrl)
     })
 
-    checkRelayHealth()
+    useNetworkStore.getState().check()
 
     loadAllAdapters().then(() => {
       const savedId = useSettingsStore.getState().settings.activeAdapterId
