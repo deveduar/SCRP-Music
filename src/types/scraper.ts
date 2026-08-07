@@ -2,6 +2,7 @@ export interface Genre {
   id: string
   label: string
   path: string
+  query?: string
 }
 
 export interface ScrapeJob {

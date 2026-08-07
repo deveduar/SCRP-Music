@@ -13,13 +13,25 @@ import { useUserStateStore } from './stores/user-state'
 import { useScraperStore } from './stores/scraper'
 import { useSettingsStore } from './stores/settings'
 import { setProxyUrl, checkRelayHealth } from './services/cors-proxy'
+import { adapterDefinitions } from './services/adapter-definitions'
+import { createAdapterFromDef } from './services/adapter-engine'
 
 const adapterModules = import.meta.glob('../local_adapters/*-adapter.ts')
 
 async function loadAllAdapters(): Promise<void> {
-  const entries = Object.entries(adapterModules)
-  if (entries.length === 0) return
+  const registered = new Set<string>()
 
+  for (const def of adapterDefinitions) {
+    try {
+      const adapter = createAdapterFromDef(def)
+      useScraperStore.getState().registerAdapter(adapter as never)
+      registered.add(def.id)
+    } catch (e) {
+      console.warn('Failed to load adapter definition:', def.id, e)
+    }
+  }
+
+  const entries = Object.entries(adapterModules)
   for (const [_path, importFn] of entries) {
     try {
       const mod = await importFn()
@@ -28,7 +40,7 @@ async function loadAllAdapters(): Promise<void> {
         | undefined
       if (AdapterClass && typeof AdapterClass === 'function') {
         const instance = new AdapterClass()
-        if (instance?.id && typeof (instance as Record<string, unknown>).getGenres === 'function') {
+        if (instance?.id && !registered.has(instance.id) && typeof (instance as Record<string, unknown>).getGenres === 'function') {
           useScraperStore.getState().registerAdapter(instance as never)
         }
       }

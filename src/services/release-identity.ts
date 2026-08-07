@@ -46,14 +46,10 @@ export function getReleaseIdentityCandidates(release: ReleaseIdentityCandidate):
   const candidates = new Set<string>()
   if (release.stableIdentity) candidates.add(release.stableIdentity)
   if (release.id) candidates.add(release.id)
-  if (release.urlRelease) {
-    candidates.add(release.urlRelease)
-    const normalizedUrl = normalizeReleaseUrl(release.urlRelease)
-    if (normalizedUrl) candidates.add(normalizedUrl)
-  }
 
   const textIdentity = getTextIdentityCandidate(release)
   if (textIdentity.replace(/:/g, '')) candidates.add(textIdentity)
+
   return Array.from(candidates)
 }
 
