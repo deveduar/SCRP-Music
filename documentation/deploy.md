@@ -12,6 +12,22 @@ Compañeras de esta guía: [`NETWORK.md`](./NETWORK.md) (modos de red) y [`Archi
 | **Docker / self-host** | Sí (servidor Node incluido) | Media | Quien quiera control total, HTTPS propio, privacidad |
 | **Hosting estático** (Netlify, GitHub Pages, Nginx simple…) | No | Baja | Solo navegación; los usuarios usan su propio proxy |
 
+## Modos de fetch de los adaptadores según el deploy
+
+Cada adaptador declara su modo en `fetch.mode`. Aplica **igual a los built-in** (`local_adapters/*.json`) **y a los custom** creados con el builder (ambos pasan por el mismo motor, `adapter-engine.ts` → `getFetchFunction`):
+
+| Modo | Vercel | Docker / Node | Estático | Cómo viaja la petición |
+|------|--------|---------------|----------|------------------------|
+| `relay` | ✓ | ✓ | ✗ **roto** | Siempre por `/api/relay` (fetch server-side); **ignora** el proxy de Settings. Sitios con Cloudflare → posible 403. |
+| `proxy` | ✓ | ✓ | ✓ | Usa `proxyUrl` de Settings (default `corsproxy.io`); fallback a `/api/relay` solo en prod + relay sano + proxy vacío. Sin proxy ni relay → falla. |
+| `direct` | ✓ | ✓ | ✓ | Fetch directo del navegador; requiere CORS permisivo en la fuente. |
+
+Notas:
+
+- **Built-in actuales**: `sbornikis` / `musiceffect` → `relay`; `internetarchive` / `incompetech` → `proxy`; `jamendo` → `direct`.
+- En **hosting estático** los adaptadores `relay` fallan (no hay backend `/api/relay`); cámbialos a `proxy`/`direct` (en el builder: *Test live* → *Switch to CORS proxy / direct*).
+- La UI distingue el relay real del despliegue: **Vercel** (host `*.vercel.app`), **self-host** (Docker/`npm start`) o **dev** (middleware Vite), visible en Settings → CORS Proxy.
+
 ## Variables de entorno
 
 Referencia completa en [`.env.example`](../.env.example) (copiar a `.env` para dev local).
@@ -21,6 +37,8 @@ Referencia completa en [`.env.example`](../.env.example) (copiar a `.env` para d
 | `RELAY_ENABLED` | **Runtime** (server) | `true` | `false` desactiva el relay en este despliegue (Vercel y Docker). |
 | `PORT` | **Runtime** (server) | `3000` | Puerto del servidor Node en Docker / self-host. |
 | `VITE_DEFAULT_PROXY` | **Build** (Vite) | `https://corsproxy.io/?` | Proxy CORS por defecto cuando el usuario no configura uno en Settings. Se hornea en el bundle. |
+
+> En **Vercel**, `VITE_DEFAULT_PROXY` se define en *Dashboard → Settings → Environment Variables* (se lee en el build, no de un `.env` del repo). En Docker, con `docker build --build-arg VITE_DEFAULT_PROXY=...`.
 
 ---
 
@@ -206,9 +224,9 @@ else:
 
 ### Settings UI
 
-- **Proxy URL vacío** + relay disponible → "Using Vercel relay (free, managed by deployment owner)"
-- **Proxy URL propio** + relay disponible → "Custom proxy configured — Vercel relay is available but not used"
-- **Proxy URL vacío** + relay no disponible → "Vercel relay unavailable — configure your own proxy below"
+- **Proxy URL vacío** + relay disponible → "Using Vercel serverless relay" / "Using self-host server relay (Docker / npm start)" / "Using local relay (Vite dev middleware)" según el despliegue
+- **Proxy URL propio** + relay disponible → "Custom proxy configured — relay is available but not used"
+- **Proxy URL vacío** + relay no disponible → "Relay unavailable — configure your own proxy below"
 
 ### CORS Proxy URL Setting
 

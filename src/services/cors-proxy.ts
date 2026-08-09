@@ -8,6 +8,12 @@ export function isProduction(): boolean {
   return typeof window !== 'undefined' && window.location.hostname !== 'localhost'
 }
 
+export function isVercelDeployment(): boolean {
+  if (typeof window === 'undefined') return false
+  const host = window.location.hostname
+  return host === 'vercel.app' || host.endsWith('.vercel.app')
+}
+
 export function setProxyUrl(url: string) {
   proxyUrl = url
 }

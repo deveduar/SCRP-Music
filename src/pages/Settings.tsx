@@ -141,7 +141,9 @@ export function Settings() {
           >
             {network.env === 'prod' ? 'Prod' : 'Dev'}
             {network.env === 'prod'
-              ? ' (Vercel)'
+              ? network.deployment === 'vercel'
+                ? ' (Vercel)'
+                : ' (self-host)'
               : ' (localhost)'}
           </span>
         </div>
@@ -163,7 +165,9 @@ export function Settings() {
           {network.relayAvailable === true && !settings.proxyUrl && (
             <p className="text-xs text-green-400">
               {network.env === 'prod'
-                ? 'Using Vercel relay (free, managed by deployment owner)'
+                ? network.deployment === 'vercel'
+                  ? 'Using Vercel serverless relay (managed by deployment owner)'
+                  : 'Using self-host server relay (Docker / npm start)'
                 : 'Using local relay (Vite dev middleware)'}
             </p>
           )}
@@ -178,7 +182,13 @@ export function Settings() {
             </p>
           )}
           <p className="text-xs text-content-muted">
-            Leave empty to use the built-in relay ({network.env === 'prod' ? 'Vercel serverless, free, rate-limited' : 'Vite dev middleware'}). Set a URL to use your own CORS proxy (e.g. corsproxy.io, allorigins.win, or self-hosted).
+            Leave empty to use the built-in relay (
+            {network.env === 'prod'
+              ? network.deployment === 'vercel'
+                ? 'Vercel serverless, free, rate-limited'
+                : 'self-host server relay'
+              : 'Vite dev middleware'}
+            ). Set a URL to use your own CORS proxy (e.g. corsproxy.io, allorigins.win, or self-hosted).
           </p>
         </div>
 
@@ -188,6 +198,7 @@ export function Settings() {
             {Object.keys(loadedAdapters).map((id) => {
               const info = getFetchInfo(id, {
                 env: network.env,
+                deployment: network.deployment,
                 relayAvailable: network.relayAvailable,
                 proxyUrl: settings.proxyUrl,
               })

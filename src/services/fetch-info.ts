@@ -1,10 +1,11 @@
 import { getDefinition } from './adapter-registry'
+import type { Deployment } from '../stores/network'
 
 export type FetchKind = 'direct' | 'relay' | 'proxy' | 'unknown'
 
 export interface FetchInfo {
   kind: FetchKind
-  transport: 'direct' | 'local-relay' | 'vercel-relay' | 'custom-proxy' | 'none' | 'unknown'
+  transport: 'direct' | 'local-relay' | 'server-relay' | 'custom-proxy' | 'none' | 'unknown'
   label: string
   detail: string
   warning?: string
@@ -12,8 +13,16 @@ export interface FetchInfo {
 
 export interface FetchInfoContext {
   env: 'dev' | 'prod'
+  deployment?: Deployment
   relayAvailable: boolean | null
   proxyUrl: string
+}
+
+function relayDetail(ctx: FetchInfoContext): string {
+  if (ctx.env !== 'prod') return 'Vite dev middleware (configureServer /api/relay)'
+  return ctx.deployment === 'vercel'
+    ? 'Vercel serverless function (api/relay.ts)'
+    : 'Self-host server relay (Docker / npm start)'
 }
 
 export function getFetchInfo(adapterId: string, ctx: FetchInfoContext): FetchInfo {
@@ -33,11 +42,9 @@ export function getFetchInfo(adapterId: string, ctx: FetchInfoContext): FetchInf
   if (mode === 'relay') {
     return {
       kind: 'relay',
-      transport: ctx.env === 'prod' ? 'vercel-relay' : 'local-relay',
+      transport: ctx.env === 'prod' ? 'server-relay' : 'local-relay',
       label: `Relay (${relayBase})`,
-      detail: ctx.env === 'prod'
-        ? 'Vercel serverless function (api/relay.ts)'
-        : 'Vite dev middleware (configureServer /api/relay)',
+      detail: relayDetail(ctx),
     }
   }
 
@@ -60,10 +67,10 @@ export function getFetchInfo(adapterId: string, ctx: FetchInfoContext): FetchInf
     if (ctx.relayAvailable === true) {
       return {
         kind: 'proxy',
-        transport: ctx.env === 'prod' ? 'vercel-relay' : 'local-relay',
+        transport: ctx.env === 'prod' ? 'server-relay' : 'local-relay',
         label: `Relay (${relayBase})`,
         detail: ctx.env === 'prod'
-          ? 'Proxy URL empty — using Vercel serverless relay'
+          ? 'Proxy URL empty — using server-side relay'
           : 'Proxy URL empty — using Vite dev relay middleware',
         warning: ctx.env === 'dev'
           ? 'In dev, proxy-mode adapters always use the configured Proxy URL. Clear it only in production.'

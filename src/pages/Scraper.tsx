@@ -65,7 +65,7 @@ export function Scraper() {
 
   const activeId = activeAdapterId ?? adapter?.id ?? ''
   const fetchInfo = activeId
-    ? getFetchInfo(activeId, { env: network.env, relayAvailable: network.relayAvailable, proxyUrl })
+    ? getFetchInfo(activeId, { env: network.env, deployment: network.deployment, relayAvailable: network.relayAvailable, proxyUrl })
     : null
 
   const [genreId, setGenreId] = useState('')
