@@ -1,4 +1,4 @@
-const DEFAULT_PROXY = 'https://corsproxy.io/?'
+const DEFAULT_PROXY = import.meta.env.VITE_DEFAULT_PROXY || 'https://corsproxy.io/?'
 const FETCH_TIMEOUT_MS = 30_000
 
 let proxyUrl = DEFAULT_PROXY

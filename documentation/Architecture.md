@@ -5,9 +5,9 @@
 SPA (Single Page Application) para navegar, buscar y gestionar releases musicales provenientes de scraping via un sistema de **adaptadores declarativos (JSON)** interpretados por un motor genérico. Sin backend salvo un relay opcional de CORS (Vercel Serverless / middleware Vite). El JSON de cada adaptador nunca se modifica — es la fuente de verdad del comportamiento de scraping. El estado de usuario (favoritos, escuchados, historial, notas) y los releases scrapeados se almacenan en IndexedDB vía Dexie y persisten entre recargas.
 
 Docs relacionados: [`NETWORK.md`](./NETWORK.md) (modos de red, relay, configuración por source),
-[`doc_deploy_relay.md`](./doc_deploy_relay.md) (deploy del relay),
+[`deploy.md`](./deploy.md) (deploy y configuración del relay),
 [`builder_architecture.md`](./builder_architecture.md) (arquitectura del builder de adaptadores)
-y [`guia-builder.md`](./guia-builder.md) (guía no-code + ejemplo).
+y [`builder_guide.md`](./builder_guide.md) (guía no-code + ejemplo).
 
 ---
 
@@ -1002,7 +1002,7 @@ Todas cachean en localStorage (`{adapterId}_page_limits`) y respetan `maxPagesCa
 - **Regla de routing** (`buildFetchUrl`): relay solo cuando `isProduction() && relayAvailable && !proxyUrl`; con el `proxyUrl` por defecto (corsproxy.io) los adapters `proxy` siempre usan el proxy configurado.
 - Los adapters `relay` **ignoran** el `proxyUrl` de Settings — siempre van por `/api/relay`.
 
-Referencias: [`NETWORK.md`](./NETWORK.md) (detalle de red) y [`doc_deploy_relay.md`](./doc_deploy_relay.md) (deploy y costos).
+Referencias: [`NETWORK.md`](./NETWORK.md) (detalle de red) y [`deploy.md`](./deploy.md) (deploy y costos).
 
 ---
 

@@ -1,14 +1,21 @@
-import { defineConfig, type Plugin } from 'vite'
+import { defineConfig, loadEnv, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-function relayDevPlugin(): Plugin {
+function relayDevPlugin(relayEnabled: boolean): Plugin {
   return {
     name: 'relay-dev-middleware',
     configureServer(server) {
       server.middlewares.use('/api/relay', async (req, res) => {
         const reqUrl = new URL(req.url || '/', 'http://localhost')
+
+        if (!relayEnabled) {
+          res.statusCode = 503
+          res.setHeader('Content-Type', 'application/json')
+          res.end(JSON.stringify({ error: 'Relay is disabled by the deployment owner', enabled: false }))
+          return
+        }
 
         if (reqUrl.searchParams.get('health') === '1') {
           res.setHeader('Content-Type', 'application/json')
@@ -68,34 +75,39 @@ function relayDevPlugin(): Plugin {
   }
 }
 
-export default defineConfig({
-  server: {
-    proxy: {},
-  },
-  plugins: [
-    relayDevPlugin(),
-    react(),
-    tailwindcss(),
-    VitePWA({
-      registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
-      manifest: {
-        name: 'SCRP Music — Release Browser & Scraper',
-        short_name: 'SCRP Music',
-        description: 'Browse, search and manage music releases from any supported source via pluggable adapters',
-        theme_color: '#09090b',
-        background_color: '#09090b',
-        display: 'standalone',
-        start_url: '/',
-        icons: [
-          { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
-        ],
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png}'],
-        navigateFallback: '/',
-      },
-    }),
-  ],
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  const relayEnabled = env.RELAY_ENABLED !== 'false'
+
+  return {
+    server: {
+      proxy: {},
+    },
+    plugins: [
+      relayDevPlugin(relayEnabled),
+      react(),
+      tailwindcss(),
+      VitePWA({
+        registerType: 'autoUpdate',
+        includeAssets: ['favicon.svg'],
+        manifest: {
+          name: 'SCRP Music — Release Browser & Scraper',
+          short_name: 'SCRP Music',
+          description: 'Browse, search and manage music releases from any supported source via pluggable adapters',
+          theme_color: '#09090b',
+          background_color: '#09090b',
+          display: 'standalone',
+          start_url: '/',
+          icons: [
+            { src: '/icon-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/icon-512x512.png', sizes: '512x512', type: 'image/png' },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,svg,png}'],
+          navigateFallback: '/',
+        },
+      }),
+    ],
+  }
 })

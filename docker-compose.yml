@@ -1,0 +1,11 @@
+services:
+  scrp-music:
+    build: .
+    image: scrp-music
+    container_name: scrp-music
+    ports:
+      - "3000:3000"
+    environment:
+      - RELAY_ENABLED=true
+      - PORT=3000
+    restart: unless-stopped

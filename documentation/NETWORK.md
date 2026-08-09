@@ -2,7 +2,7 @@
 
 This document describes how SCRP Music fetches content from scraping sources: the three network modes, how the routing decision is made in each environment, and the recent changes to the fetch/relay pipeline.
 
-Companion docs: [`doc_deploy_relay.md`](./doc_deploy_relay.md) (relay deployment & configuration) and [`Architecture.md`](./Architecture.md) (overall design). Each adapter's own configuration is documented in its README under [`local_adapters/`](./local_adapters).
+Companion docs: [`deploy.md`](./deploy.md) (relay deployment & configuration) and [`Architecture.md`](./Architecture.md) (overall design). Each adapter's own configuration is documented in its README under [`local_adapters/`](./local_adapters).
 
 ---
 

@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:server": "tsc -p tsconfig.server.json",
     "lint": "oxlint",
     "test": "vitest run",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "start": "node dist-server/server/index.js"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.2",

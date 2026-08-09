@@ -100,9 +100,11 @@ See [`Architecture.md`](./documentation/Architecture.md) for the full architectu
 
 ```bash
 npm install
-npm run dev      # development server (HMR)
-npm run build    # tsc -b && vite build
-npm run preview  # preview production build
+npm run dev            # development server (HMR)
+npm run build          # tsc -b && vite build
+npm run preview        # preview production build
+npm run build:server   # compile the Docker/Node server (dist-server/)
+npm start              # run the Node server (static + /api/relay) after build:server
 ```
 
 The app runs entirely in the browser — no backend required. All data is stored in IndexedDB and survives page reloads.
@@ -114,13 +116,18 @@ The app runs entirely in the browser — no backend required. All data is stored
 
 ## Configuration
 
-- **CORS proxy URL**: configurable in the Scraper page (default: `https://corsproxy.io/?`)
-- **Relay**: server-side fetch on `/api/relay` (Vite dev middleware + Vercel serverless function) that bypasses CORS
+- **CORS proxy URL**: configurable in the Scraper page (default: `https://corsproxy.io/?`; override at build time with `VITE_DEFAULT_PROXY`)
+- **Relay**: server-side fetch on `/api/relay` (Vite dev middleware + Vercel serverless function + Docker/Node server) that bypasses CORS
 - **Page limit cache**: stored in `localStorage` (adapter-specific key)
 - **Batch action bar state**: persisted in `localStorage` under `batch_action_bar`
 - **Selection state**: `batch_selection_mode` and `batch_selected_ids` in `localStorage`
 - **User settings**: stored in IndexedDB
 - **API Keys**: stored in IndexedDB (Settings → API Keys), dynamic per-adapter (e.g. `myAdapter: "client_id"`). Required for API-based adapters.
+- **Environment variables**: see [`.env.example`](./.env.example) — `RELAY_ENABLED` (runtime), `PORT` (Docker/Node server), `VITE_DEFAULT_PROXY` (build-time)
+
+## Deployment
+
+See [`deploy.md`](./documentation/deploy.md) for deployment options: **Vercel** (recommended, serverless relay), **Docker / self-host** (Node server with built-in relay), or **static hosting** (no relay — users configure their own CORS proxy).
 
 ## Project Structure
 

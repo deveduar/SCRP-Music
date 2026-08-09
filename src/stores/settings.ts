@@ -16,7 +16,7 @@ const DEFAULT: UserSettings = {
   itemsPerPage: 50,
   defaultSort: 'year',
   quickLinks: ['google', 'youtube', 'spotify', 'beatport', 'discogs', 'bandcamp', 'soundcloud'],
-  proxyUrl: 'https://corsproxy.io/?',
+  proxyUrl: import.meta.env.VITE_DEFAULT_PROXY || 'https://corsproxy.io/?',
   activeAdapterId: '',
   apiKeys: {},
 }

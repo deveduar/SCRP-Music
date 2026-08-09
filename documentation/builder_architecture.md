@@ -1,6 +1,6 @@
 # Builder de adaptadores — Arquitectura
 
-> Documento técnico. Para la guía de usuario en español (con ejemplo paso a paso) ver `guia-builder.md`.
+> Documento técnico. Para la guía de usuario en español (con ejemplo paso a paso) ver `builder_guide.md`.
 
 ## Visión general
 

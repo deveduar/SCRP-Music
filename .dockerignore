@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-server
+tests
+docs
+documentation
+.opencode
+.codex
+.agents
+.git
+.gitignore
+.env
+.env.local
+.env.example
+*.md
+*.log
