@@ -7,6 +7,7 @@ import {
   BarChart3,
   Settings,
   Globe,
+  Braces,
   Menu,
   X,
   WifiOff,
@@ -18,6 +19,7 @@ const navItems = [
   { to: '/scraper', label: 'Scraper', icon: Globe },
   { to: '/history', label: 'History', icon: History },
   { to: '/stats', label: 'Stats', icon: BarChart3 },
+  { to: '/adapters', label: 'Adapters', icon: Braces },
 ]
 
 export function Layout() {

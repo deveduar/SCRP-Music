@@ -29,6 +29,7 @@ A **single-page application** (SPA) for browsing, searching, and managing music 
 - Recent Jobs section showing +N new/updated per job
 - Export scraped results as JSON
 - **Two adapter modes**: HTML scrapers with page detection, delays and optional proxy; API adapters using JSON endpoints with dynamic API keys — UI auto-adapts to adapter kind
+- **No-code adapter builder** — a dedicated **Adapters** page with a wizard to create adapters without touching code: form steps (Basics, Transport, Genres, Pagination, Structure, URLs, Field Mapping), a JSON editor with live validation, live testing, and an AI copy-prompt helper that downloads a real sample of the source and generates a ready-to-paste adapter JSON
 
 ### Persistent State (IndexedDB via Dexie)
 - **Favorites** and **listen status** per release
@@ -85,6 +86,7 @@ A **single-page application** (SPA) for browsing, searching, and managing music 
 | Styling | TailwindCSS 4 |
 | State | Zustand 5 |
 | Storage | Dexie 4 (IndexedDB) |
+| Validation | Zod 4 |
 | Virtualization | TanStack Virtual 3 |
 | Search | Fuse.js 7 |
 | Icons | Lucide React |
@@ -92,7 +94,7 @@ A **single-page application** (SPA) for browsing, searching, and managing music 
 
 ## Architecture
 
-See [`Architecture.md`](./Architecture.md) for the full architecture breakdown — types, services, stores, components, pages, data flow, and theming.
+See [`Architecture.md`](./documentation/Architecture.md) for the full architecture breakdown — types, services, stores, components, pages, data flow, and theming.
 
 ## Usage
 
@@ -113,7 +115,7 @@ The app runs entirely in the browser — no backend required. All data is stored
 ## Configuration
 
 - **CORS proxy URL**: configurable in the Scraper page (default: `https://corsproxy.io/?`)
-- **Vite dev proxy**: `/api/*-relay` → source site (bypasses CORS/403 by forwarding browser-native headers)
+- **Relay**: server-side fetch on `/api/relay` (Vite dev middleware + Vercel serverless function) that bypasses CORS
 - **Page limit cache**: stored in `localStorage` (adapter-specific key)
 - **Batch action bar state**: persisted in `localStorage` under `batch_action_bar`
 - **Selection state**: `batch_selection_mode` and `batch_selected_ids` in `localStorage`
@@ -127,13 +129,14 @@ src/
 ├── components/     # Reusable UI components (Layout, ReleaseCard, ReleaseList, etc.)
 ├── pages/          # Route pages (Dashboard, Browse, Scraper, History, Stats, Settings)
 ├── services/       # Business logic (search, CORS proxy, YouTube, batch actions, links)
-├── storage/        # IndexedDB layer (Dexie schema v3 + CRUD + export/import)
+├── storage/        # IndexedDB layer (Dexie schema v4 + CRUD + export/import)
 ├── stores/         # Zustand stores (releases, user state, settings, scraper)
 ├── types/          # TypeScript interfaces (release, user state, scraper, adapter, export, links)
 └── ... App.tsx, main.tsx, index.css
 local_adapters/     # Pluggable site-specific adapters (one file per source + shared utilities)
+documentation/      # Technical & user documentation (architecture, network, adapter builder guide)
 ```
 
 ## Legal Disclaimer
 
-This software is provided as-is for educational and personal use. The built-in adapters scrape only from legal, publicly accessible sources (royalty-free music, Creative Commons APIs, public domain archives). However, users may create custom adapters for any website. **You are solely responsible for ensuring that your use of this software complies with all applicable laws and terms of service of the sites you access.** See [TERMS.md](./TERMS.md) for full terms.
+This software is provided as-is for educational and personal use. The built-in adapters scrape only from legal, publicly accessible sources (royalty-free music, Creative Commons APIs, public domain archives). However, users may create custom adapters for any website. **You are solely responsible for ensuring that your use of this software complies with all applicable laws and terms of service of the sites you access.** See [TERMS.md](./documentation/TERMS.md) for full terms.

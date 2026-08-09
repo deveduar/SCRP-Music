@@ -127,7 +127,7 @@ In **Settings → CORS Proxy URL**:
 The `.env` file sets `RELAY_ENABLED=true` for local testing. For local development:
 
 1. The relay health check runs against `localhost:5173/api/relay`
-2. Vite proxies `/api/*` to the Serverless Function automatically
+2. Vite serves the relay via the `relayDevPlugin()` middleware in `vite.config.ts` — it replicates the serverless function on `/api/relay` in `npm run dev` (no proxy config needed)
 3. Or just use `corsproxy.io` directly (default behavior)
 
 To test with relay disabled locally, set `RELAY_ENABLED=false` in `.env` and restart the dev server.
@@ -139,6 +139,7 @@ To test with relay disabled locally, set `RELAY_ENABLED=false` in `.env` and res
 - Check if `RELAY_ENABLED=false` in Vercel env vars
 - Check Vercel Function logs for errors
 - The target site may be blocking the relay's IP
+- If the site is protected by **Cloudflare** ("Attention Required"), the relay will keep returning 403 — the server-side fetch carries no browser cookies. Use a CORS proxy (`proxy`) or browser `direct` mode for that site instead.
 
 ### TypeScript error "Cannot find name 'process'"
 

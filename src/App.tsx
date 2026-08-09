@@ -15,7 +15,11 @@ import { useSettingsStore } from './stores/settings'
 import { setProxyUrl } from './services/cors-proxy'
 import { adapterDefinitions } from './services/adapter-definitions'
 import { createAdapterFromDef } from './services/adapter-engine'
+import { registerCustomDefinition } from './services/adapter-registry'
+import { getCustomAdapters } from './storage/db'
 import { useNetworkStore } from './stores/network'
+import { Adapters } from './pages/Adapters'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 const adapterModules = import.meta.glob('../local_adapters/*-adapter.ts')
 
@@ -29,6 +33,18 @@ async function loadAllAdapters(): Promise<void> {
       registered.add(def.id)
     } catch (e) {
       console.warn('Failed to load adapter definition:', def.id, e)
+    }
+  }
+
+  const customAdapters = await getCustomAdapters()
+  for (const entry of customAdapters) {
+    try {
+      registerCustomDefinition(entry.def)
+      const adapter = createAdapterFromDef(entry.def)
+      useScraperStore.getState().registerAdapter(adapter as never)
+      registered.add(entry.id)
+    } catch (e) {
+      console.warn('Failed to load custom adapter:', entry.id, e)
     }
   }
 
@@ -106,16 +122,19 @@ export default function App() {
     <BrowserRouter>
       <ThemeProvider>
         <DataInit>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/browse" element={<Browse />} />
-              <Route path="/scraper" element={<Scraper />} />
-              <Route path="/history" element={<History />} />
-              <Route path="/stats" element={<Stats />} />
-              <Route path="/settings" element={<Settings />} />
-            </Route>
-          </Routes>
+          <ErrorBoundary>
+            <Routes>
+              <Route element={<Layout />}>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/browse" element={<Browse />} />
+                <Route path="/scraper" element={<Scraper />} />
+                <Route path="/adapters" element={<Adapters />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/stats" element={<Stats />} />
+                <Route path="/settings" element={<Settings />} />
+              </Route>
+            </Routes>
+          </ErrorBoundary>
         </DataInit>
       </ThemeProvider>
     </BrowserRouter>

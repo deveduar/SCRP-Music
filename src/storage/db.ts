@@ -3,6 +3,15 @@ import type { UserReleaseState, HistoryEntry, UserSettings } from '../types/user
 import type { Release } from '../types/release'
 import type { ScrapeJob } from '../types/scraper'
 import type { ExportPayload } from '../types/export'
+import type { AdapterDefinition } from '../types/adapter-definition'
+
+export interface CustomAdapterEntry {
+  id: string
+  name: string
+  def: AdapterDefinition
+  createdAt: string
+  updatedAt: string
+}
 
 const db = new Dexie('SCRP Music') as Dexie & {
   states: EntityTable<UserReleaseState, 'id'>
@@ -10,6 +19,7 @@ const db = new Dexie('SCRP Music') as Dexie & {
   settings: EntityTable<UserSettings, 'id'>
   releases: EntityTable<Release, 'id'>
   jobs: EntityTable<ScrapeJob, 'id'>
+  customAdapters: EntityTable<CustomAdapterEntry, 'id'>
 }
 
 db.version(3).stores({
@@ -18,6 +28,10 @@ db.version(3).stores({
   settings: 'id',
   releases: 'id, year, genre',
   jobs: 'id, date',
+})
+
+db.version(4).stores({
+  customAdapters: 'id, name, updatedAt',
 })
 
 export async function getReleaseState(id: string): Promise<UserReleaseState | undefined> {
@@ -78,6 +92,7 @@ export async function clear(): Promise<void> {
   await db.history.clear()
   await db.releases.clear()
   await db.jobs.clear()
+  await db.customAdapters.clear()
 }
 
 export async function saveJob(job: ScrapeJob): Promise<void> {
@@ -90,6 +105,22 @@ export async function getJobs(): Promise<ScrapeJob[]> {
 
 export async function clearJobs(): Promise<void> {
   await db.jobs.clear()
+}
+
+export async function getCustomAdapters(): Promise<CustomAdapterEntry[]> {
+  return db.customAdapters.toArray()
+}
+
+export async function getCustomAdapter(id: string): Promise<CustomAdapterEntry | undefined> {
+  return db.customAdapters.get(id)
+}
+
+export async function saveCustomAdapter(entry: CustomAdapterEntry): Promise<void> {
+  await db.customAdapters.put(entry)
+}
+
+export async function deleteCustomAdapter(id: string): Promise<void> {
+  await db.customAdapters.delete(id)
 }
 
 export async function getAllHistory(): Promise<HistoryEntry[]> {

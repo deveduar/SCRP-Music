@@ -23,6 +23,7 @@ interface ScraperState {
   jobs: ScrapeJob[]
 
   registerAdapter: (adapter: ScraperAdapter) => void
+  removeAdapter: (id: string) => void
   setActiveAdapter: (id: string) => void
   detectPages: (genreId: string, proxyUrl: string) => Promise<number | null>
   start: (genre: Genre, options: ScrapeAdapterOptions, autoLoad?: boolean, skipExisting?: boolean) => Promise<void>
@@ -64,6 +65,12 @@ export const useScraperStore = create<ScraperState>((set, get) => ({
       adapters,
       ...(shouldActivate ? { adapter, activeAdapterId: adapter.id } : {}),
     })
+  },
+
+  removeAdapter: (id) => {
+    const adapters = { ...get().adapters }
+    delete adapters[id]
+    set({ adapters })
   },
 
   setActiveAdapter: (id) => {

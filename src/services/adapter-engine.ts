@@ -133,7 +133,7 @@ async function evaluateExtractor(
       if (extractor.source === 'urlRelease' && context.urlRelease) {
         input = context.urlRelease
       } else if (extractor.source === 'identifier') {
-        input = String(resolveCtxValue(context, 'identifier') ?? '')
+        input = String(resolveCtxValue(context, extractor.compositeFields?.[0] ?? 'identifier') ?? '')
       } else if (extractor.source === 'composite' && extractor.compositeFields) {
         input = extractor.compositeFields.map(f => String(resolveCtxValue(context, f) ?? '')).join('::')
       } else if (context.urlRelease) {
@@ -447,6 +447,26 @@ function resolveGenrePath(def: AdapterDefinition, genreId: string): string {
   return items.find(g => g.id === genreId)?.path || ''
 }
 
+export function resolvePageUrl(
+  def: AdapterDefinition,
+  genreId: string,
+  page: number,
+  query?: string,
+  apiKey?: string,
+): string {
+  return def.kind === 'api'
+    ? buildApiUrl(def, genreId, page, apiKey, query)
+    : buildPageUrl(def, genreId, page, query)
+}
+
+export function fetchForDef(
+  def: AdapterDefinition,
+  url: string,
+  signal?: AbortSignal,
+): Promise<string> {
+  return getFetchFunction(def)(url, signal)
+}
+
 export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
   const cacheKey = `${def.id}${PAGE_LIMIT_CACHE_KEY_SUFFIX}`
 
@@ -639,13 +659,21 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
 
         // Client-side pagination: fetch all, filter, slice
         if (def.pagination.detection === 'client-side') {
+          let clientUrl = ''
           try {
             const url = buildApiUrl(def, genreId, 1, apiKey, query)
+            clientUrl = url
             const raw = await fetchFn(url, signal)
             const data = JSON.parse(raw)
             const items = (def.api?.clientSidePaginationField
               ? (getNestedValue(data, def.api.clientSidePaginationField) || [])
               : (Array.isArray(data) ? data : [])) as Record<string, unknown>[]
+            if (items.length === 0) {
+              const hint = def.api?.clientSidePaginationField
+                ? `0 items at clientSidePaginationField "${def.api.clientSidePaginationField}" — check the path or the genre query`
+                : '0 items — the response is not an array; set api.clientSidePaginationField to the array field'
+              callbacks.onError(hint)
+            }
 
             const filtered = genreId && genreId !== 'all'
               ? items.filter(item => {
@@ -683,7 +711,8 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
             callbacks.onProgress({ ...progress })
             callbacks.onPageDone(1, sliced.length)
           } catch (err) {
-            callbacks.onError((err as Error).message)
+            const detail = clientUrl ? ` (${clientUrl})` : ''
+            callbacks.onError(`${(err as Error).message}${detail}`)
           }
 
           callbacks.onComplete(results)
@@ -698,17 +727,25 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
           progress.currentPage = page
           callbacks.onProgress({ ...progress })
 
+          let pageUrl = ''
           try {
             if (def.kind === 'api') {
               // API mode: fetch JSON
               const url = buildApiUrl(def, genreId, page, apiKey, query)
+              pageUrl = url
               const raw = await fetchFn(url, signal)
               const data = JSON.parse(raw)
 
               // Check API status
               if (def.api?.statusFieldPath) {
-                const status = String(getNestedValue(data, def.api.statusFieldPath))
+                const rawStatus = getNestedValue(data, def.api.statusFieldPath)
+                const status = String(rawStatus ?? '')
                 if (def.api.statusSuccessValue && status !== def.api.statusSuccessValue) {
+                  if (rawStatus === undefined) {
+                    throw new Error(
+                      `statusFieldPath "${def.api.statusFieldPath}" not found in the response — remove it unless the API really has that field`,
+                    )
+                  }
                   let msg = `API error: status ${status}`
                   if (def.api.errorMessagePath) {
                     const errMsg = String(getNestedValue(data, def.api.errorMessagePath) || '')
@@ -724,9 +761,15 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
               }
 
               // Get results array
-              const resultsPath = def.api?.resultsPath || 'results'
-              const items = getNestedValue(data, resultsPath)
+              const resultsPath = def.api?.resultsPath || ''
+              const items = resultsPath ? getNestedValue(data, resultsPath) : data
               const itemsArray = Array.isArray(items) ? items : []
+              if (itemsArray.length === 0) {
+                const hint = resultsPath
+                  ? `0 items at resultsPath "${resultsPath}" — check the path (e.g. "docs", "results") or the genre query`
+                  : '0 items at the response root — the response may be an object; set resultsPath to its array field'
+                callbacks.onError(hint)
+              }
 
               progress.releasesFound += itemsArray.length
               callbacks.onProgress({ ...progress })
@@ -755,6 +798,7 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
             } else {
               // HTML mode
               const url = buildPageUrl(def, genreId, page)
+              pageUrl = url
               const html = await fetchFn(url, signal)
               const doc = parseHtml(html)
               const releases = extractReleasesFromListHtml(doc, def)
@@ -815,7 +859,8 @@ export function createAdapterFromDef(def: AdapterDefinition): ScraperAdapter {
             }
           } catch (err) {
             progress.errors++
-            callbacks.onError(`Error scraping page ${page}: ${(err as Error).message}`)
+            const detail = pageUrl ? ` (${pageUrl})` : ''
+            callbacks.onError(`Error scraping page ${page}${detail}: ${(err as Error).message}`)
           }
 
           await delay(options.delayPage)

@@ -28,6 +28,7 @@ dist-ssr
 .codex
 .agents
 docs/
+tests/
 
 local_adapters/*
 !local_adapters/incompetech-adapter.ts

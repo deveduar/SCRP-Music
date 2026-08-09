@@ -1,4 +1,4 @@
-import { getAdapterDefinition } from './adapter-definitions'
+import { getDefinition } from './adapter-registry'
 
 export type FetchKind = 'direct' | 'relay' | 'proxy' | 'unknown'
 
@@ -17,7 +17,7 @@ export interface FetchInfoContext {
 }
 
 export function getFetchInfo(adapterId: string, ctx: FetchInfoContext): FetchInfo {
-  const def = getAdapterDefinition(adapterId)
+  const def = getDefinition(adapterId)
   const mode = def?.fetch?.mode ?? 'unknown'
   const relayBase = def?.fetch?.relayBase ?? '/api/relay'
 

@@ -12,9 +12,11 @@ Every adapter definition declares a fetch mode in its `fetch.mode` field (`local
 
 | Mode | How requests are sent |
 |------|-----------------------|
-| **`relay`** | `fetchDirectRelay()` → `<relayBase>?url=<target>`. Always routed through the relay, **ignores the Settings proxy URL**. |
-| **`proxy`** | `fetchWithProxy()` → `buildFetchUrl()` picks relay or the user's custom proxy (see §2). |
+| **`relay`** | `fetchDirectRelay()` → `<relayBase>?url=<target>`. Always routed through the relay, **ignores the Settings proxy URL**. This is a **server-side (Node) fetch** — some sites protected by Cloudflare reject it with HTTP 403 "Attention Required" (the request carries no browser cookies). |
+| **`proxy`** | `fetchWithProxy()` → `buildFetchUrl()` picks relay or the user's custom proxy (see §2). Good default for Cloudflare-protected sites that block the relay. |
 | **`direct`** | Plain `fetch` to the source. Only viable when the source sends permissive CORS headers (e.g. public APIs). |
+
+> **Rule of thumb for HTML sites**: do not default them to `relay`. If the site blocks the relay with 403 (Cloudflare / anti-bot), switch to `proxy` or `direct`. In the adapter builder, the AI prompt mirrors the transport the app used to fetch the sample (`fetch.mode` must equal the sample transport), so the adapter automatically uses the path that already worked.
 
 The fetch code lives in `src/services/cors-proxy.ts`. Both relayed and proxied requests:
 - send a Chrome user-agent + HTML accept headers,
@@ -103,12 +105,13 @@ Detected limits are cached in localStorage under `{adapterId}_page_limits` as `{
 5. **Dev relay middleware** (`vite.config.ts`): `relayDevPlugin()` serves `/api/relay` in `npm run dev`, so relay-mode adapters work locally without deploying.
 6. **`html-last-page` detection** (`src/types/adapter-definition.ts` + `src/services/adapter-engine.ts`): new detection mode + `lastPageRegex`; detection on the relayed HTML source went from ~23 probe requests (with 404s in the console) to a single request. Verified live: 2273 pages detected.
 7. **Dev relay health check enabled** (`checkRelayHealth`): no longer gated to production, since the dev middleware provides the endpoint.
+8. **Cloudflare 403 finding**: the relay is a server-side (Node) fetch with no browser cookies, so Cloudflare-protected sites reject it with HTTP 403 "Attention Required" — no relay, proxy or allorigins workaround fixed it. The reliable path for such sites is `proxy` (CORS proxy) or `direct` (browser fetch). The adapter builder now: (a) mirrors the actual sample transport into the prompt so `fetch.mode` matches the path that already worked, and (b) shows an amber panel in "Test live" (HTTP 403/429/Cloudflare/"Attention Required") with one-click **Switch to CORS proxy** / **Switch to direct**.
 
 ---
 
 ## 7. Adding a new adapter
 
 1. Create `local_adapters/<id>.json` following the `AdapterDefinition` type (`src/types/adapter-definition.ts`).
-2. Pick the fetch mode: `relay` for sites that block CORS proxies, `proxy` for JSON APIs behind a proxy, `direct` only for CORS-friendly APIs.
+2. Pick the fetch mode: `proxy` for JSON APIs behind a CORS proxy, `direct` only for CORS-friendly APIs, and `relay` only for sites that block CORS proxies but allow server-side fetch (remember: Cloudflare-protected sites reject the relay with HTTP 403 — use `proxy`/`direct` for those).
 3. For relay mode set `fetch.relayBase: "/api/relay"` and, when the site exposes its last page in the pagination HTML, prefer `pagination.detection: "html-last-page"` + `lastPageRegex` over `binary-search`.
 4. Restart `npm run dev`; the adapter is auto-registered (definitions take precedence over the legacy TS adapters in `local_adapters/*-adapter.ts`).

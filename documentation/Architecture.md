@@ -4,7 +4,10 @@
 
 SPA (Single Page Application) para navegar, buscar y gestionar releases musicales provenientes de scraping via un sistema de **adaptadores declarativos (JSON)** interpretados por un motor genérico. Sin backend salvo un relay opcional de CORS (Vercel Serverless / middleware Vite). El JSON de cada adaptador nunca se modifica — es la fuente de verdad del comportamiento de scraping. El estado de usuario (favoritos, escuchados, historial, notas) y los releases scrapeados se almacenan en IndexedDB vía Dexie y persisten entre recargas.
 
-Docs relacionados: [`NETWORK.md`](./NETWORK.md) (modos de red, relay, configuración por source) y [`doc_deploy_relay.md`](./doc_deploy_relay.md) (deploy del relay).
+Docs relacionados: [`NETWORK.md`](./NETWORK.md) (modos de red, relay, configuración por source),
+[`doc_deploy_relay.md`](./doc_deploy_relay.md) (deploy del relay),
+[`builder_architecture.md`](./builder_architecture.md) (arquitectura del builder de adaptadores)
+y [`guia-builder.md`](./guia-builder.md) (guía no-code + ejemplo).
 
 ---
 
@@ -18,6 +21,7 @@ Docs relacionados: [`NETWORK.md`](./NETWORK.md) (modos de red, relay, configurac
 | Estado           | Zustand 5                        |
 | Persistencia     | Dexie 4 (IndexedDB)              |
 | Búsqueda         | Fuse.js 7 (fuzzy search)         |
+| Validación       | Zod 4 (schema de adaptadores)    |
 | Virtualización   | TanStack Virtual 3               |
 | CSS              | TailwindCSS 4 (`@tailwindcss/vite`) |
 | Iconos           | Lucide React                     |
@@ -40,6 +44,14 @@ src/
 ├── services/                 # Lógica pura (sin React) — agnóstica del origen
 │   ├── adapter-engine.ts         # createAdapterFromDef(): interpreta un AdapterDefinition como ScraperAdapter
 │   ├── adapter-definitions.ts    # Carga de local_adapters/*.json + lookup por id
+│   ├── adapter-schema.ts         # Zod schema + validateAdapterDefinition + parseAdapterJson
+│   ├── adapter-form.ts           # Estado del wizard (AdapterFormState) ↔ definición
+│   ├── adapter-field-meta.ts     # Catálogo de campos y estrategias de extracción (UI)
+│   ├── adapter-registry.ts       # Registro de definiciones (builtins + custom)
+│   ├── adapter-tester.ts         # testAdapter (Test live)
+│   ├── ai-prompt.ts              # buildAiPrompt — prompt copiable para la IA
+│   ├── page-extract.ts           # analyzePage/buildHintsText/detectGenres (estructura + géneros)
+│   ├── source-sample.ts          # makeSample/makeDetailSample/fetchSourceSamples (muestras)
 │   ├── cors-proxy.ts             # Red: fetch con proxy / relay directo / directo, timeout, health check
 │   ├── fetch-info.ts             # getFetchInfo(): transporte efectivo por adapter (para la UI)
 │   ├── release-identity.ts       # Candidatos de identidad para merge anti-duplicados
@@ -48,7 +60,7 @@ src/
 │   ├── batch-actions.ts          # Apertura secuencial de tabs + batch state ops
 │   └── links.ts                  # GLOBAL_LINKS, ADAPTER_LINKS registry, buildSearchQuery
 ├── storage/                  # Capa IndexedDB
-│   └── db.ts                     # Dexie schema v3 + helpers CRUD + export/import
+│   └── db.ts                     # Dexie schema v4 (v3 + customAdapters) + helpers CRUD + export/import
 ├── stores/                   # Estado global (Zustand)
 │   ├── releases.ts               # Releases store (carga, merge, búsqueda, filtros)
 │   ├── user-state.ts             # Favoritos, listen, history, notes
@@ -59,6 +71,7 @@ src/
 ├── components/               # Componentes reutilizables
 │   ├── ThemeProvider.tsx
 │   ├── Layout.tsx
+│   ├── ErrorBoundary.tsx         # Red de seguridad de errores de render (envuelve <Routes>)
 │   ├── ReleaseCard.tsx
 │   ├── ReleaseList.tsx
 │   ├── SearchBar.tsx
@@ -68,11 +81,23 @@ src/
 │   ├── StatsCard.tsx
 │   ├── BatchActionBar.tsx
 │   ├── YouTubeButton.tsx
-│   └── YouTubeEmbed.tsx
+│   ├── YouTubeEmbed.tsx
+│   ├── forms/                     # Controles de formulario del wizard
+│   │   └── FormControls.tsx
+│   └── adapter-wizard/            # Pasos del wizard del builder de adaptadores
+│       ├── StepBasics.tsx
+│       ├── StepForm.tsx
+│       ├── StepGenres.tsx
+│       ├── StepStructure.tsx
+│       ├── StepFields.tsx
+│       ├── StepTestSave.tsx
+│       ├── AiSourceForm.tsx       # Muestras + prompt IA
+│       └── AdapterSummary.tsx
 ├── pages/                    # Páginas del router
 │   ├── Dashboard.tsx
 │   ├── Browse.tsx
 │   ├── Scraper.tsx
+│   ├── Adapters.tsx               # Builder no-code de adaptadores (wizard + JSON + IA)
 │   ├── History.tsx
 │   ├── Stats.tsx
 │   └── Settings.tsx
@@ -662,7 +687,7 @@ loadAllAdapters()  // definitions-first, TS legacy como fallback
 initFromDb(); loadAllStates(); loadJobs()
 ```
 
-- **`loadAllAdapters()`**: registra primero todos los `adapterDefinitions` (creando cada adapter con `createAdapterFromDef`); después recorre `local_adapters/*-adapter.ts` y solo registra un TS si su `id` **no** tiene definición JSON (hoy ninguno: los 5 ids tienen `.json` → los TS legacy quedan como código muerto/referencia)
+- **`loadAllAdapters()`**: registra primero todos los `adapterDefinitions` (creando cada adapter con `createAdapterFromDef`); después carga los **adaptadores custom desde IndexedDB** (`getCustomAdapters` → `registerCustomDefinition` → `createAdapterFromDef`); por último recorre `local_adapters/*-adapter.ts` y solo registra un TS si su `id` **no** tiene definición JSON (hoy ninguno: los 5 ids tienen `.json` → los TS legacy quedan como código muerto/referencia)
 - Restaura `activeAdapterId`; muestra "Loading..." hasta terminar
 
 ### `ReleaseCard.tsx`
@@ -771,6 +796,9 @@ db.version(3).stores({
   releases: 'id, year, genre',
   jobs:     'id, date',
 })
+db.version(4).stores({
+  customAdapters: 'id, name, updatedAt',
+})
 ```
 
 #### Tablas
@@ -782,6 +810,7 @@ db.version(3).stores({
 | `settings` | `id` ('default') | UserSettings |
 | `releases` | `id` (Release.id) | Release[] completo |
 | `jobs` | `id` (generado) | ScrapeJob[], indexado por date |
+| `customAdapters` | `id` (adapter id) | `CustomAdapterEntry { id, name, def, createdAt, updatedAt }` — adaptadores guardados desde el builder (v4) |
 
 #### Helpers
 
@@ -809,6 +838,7 @@ App Load
         ├─► network.check() → health check relay
         ├─► loadAllAdapters()
         │     ├─► adapterDefinitions (local_adapters/*.json) → createAdapterFromDef() → registerAdapter()
+        │     ├─► custom adapters (IndexedDB) → registerCustomDefinition() → registerAdapter()
         │     └─► legacy *-adapter.ts (solo si el id NO tiene definición JSON)
         ├─► releases.initFromDb() → db.releases.toArray() → store + Fuse index
         ├─► user-state.loadAllStates() → db.states.toArray()
@@ -931,8 +961,8 @@ Los `*-adapter.ts` legacy se mantienen **solo como referencia** (obsoletos): doc
 
 | Modo | Qué hace | Cuándo |
 |------|----------|--------|
-| `relay` | `fetchDirectRelay('/api/relay', url)` → `?url=` | Sitios que bloquean proxies CORS públicos |
-| `proxy` | `fetchWithProxy()` → `buildFetchUrl()` | APIs JSON tras un proxy CORS |
+| `relay` | `fetchDirectRelay('/api/relay', url)` → `?url=` (fetch server-side) | Sitios que bloquean proxies CORS pero permiten peticiones desde servidor. **Ojo**: Cloudflare rechaza el relay con HTTP 403 — para esos usa proxy/direct |
+| `proxy` | `fetchWithProxy()` → `buildFetchUrl()` | APIs JSON tras un proxy CORS; también webs HTML protegidas (p. ej. Cloudflare) |
 | `direct` | fetch plano con timeout/headers | APIs con CORS permisivo |
 
 Ver [`NETWORK.md`](./NETWORK.md) para la regla completa de routing, dev vs prod y health check.
@@ -955,7 +985,7 @@ Todas cachean en localStorage (`{adapterId}_page_limits`) y respetan `maxPagesCa
 ### Cómo escribir un adapter JSON
 
 1. Crear `local_adapters/<id>.json` siguiendo `AdapterDefinition` (ver §Types).
-2. Elegir `fetch.mode`: `relay` para sitios que bloquean proxies CORS; `proxy` para APIs JSON; `direct` solo para APIs con CORS permisivo.
+2. Elegir `fetch.mode`: `proxy` para APIs JSON tras un proxy CORS; `direct` solo para APIs con CORS permisivo; `relay` únicamente si el sitio bloquea proxies CORS pero permite fetch server-side (recuerda: los sitios con Cloudflare rechazan el relay con HTTP 403).
 3. En modo relay usar `fetch.relayBase: "/api/relay"`. Si el sitio expone su última página en el paginador HTML, preferir `pagination.detection: "html-last-page"` + `lastPageRegex` sobre `binary-search`.
 4. Declarar `genres` (hardcoded o dynamic), `urlTemplates` y `fieldMapping` (extractores).
 5. Para HTML: `selectors.listPage` (+ `detailPage` si `scrapeMode: 'two-phase'`); para API: `api.resultsPath` y, si hay paginación, `api.countUrlTemplate`/`countFieldPath`.
