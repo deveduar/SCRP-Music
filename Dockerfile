@@ -4,6 +4,8 @@ FROM node:22-alpine AS build
 WORKDIR /app
 ARG VITE_DEFAULT_PROXY=https://corsproxy.io/?
 ENV VITE_DEFAULT_PROXY=$VITE_DEFAULT_PROXY
+ARG VITE_DEFAULT_API_KEYS=
+ENV VITE_DEFAULT_API_KEYS=$VITE_DEFAULT_API_KEYS
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

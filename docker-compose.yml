@@ -1,11 +1,15 @@
 services:
   scrp-music:
-    build: .
+    build:
+      context: .
+      args:
+        VITE_DEFAULT_PROXY: ${VITE_DEFAULT_PROXY:-https://corsproxy.io/?}
+        VITE_DEFAULT_API_KEYS: ${VITE_DEFAULT_API_KEYS:-}
     image: scrp-music
     container_name: scrp-music
     ports:
       - "3000:3000"
     environment:
-      - RELAY_ENABLED=true
-      - PORT=3000
+      - RELAY_ENABLED=${RELAY_ENABLED:-true}
+      - PORT=${PORT:-3000}
     restart: unless-stopped

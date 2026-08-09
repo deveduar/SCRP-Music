@@ -37,8 +37,12 @@ Referencia completa en [`.env.example`](../.env.example) (copiar a `.env` para d
 | `RELAY_ENABLED` | **Runtime** (server) | `true` | `false` desactiva el relay en este despliegue (Vercel y Docker). |
 | `PORT` | **Runtime** (server) | `3000` | Puerto del servidor Node en Docker / self-host. |
 | `VITE_DEFAULT_PROXY` | **Build** (Vite) | `https://corsproxy.io/?` | Proxy CORS por defecto cuando el usuario no configura uno en Settings. Se hornea en el bundle. |
+| `VITE_DEFAULT_API_KEYS` | **Build** (Vite) | *(vacío)* | API keys por defecto en formato JSON (`{"jamendo":"xxx"}`), sembradas en Settings en la **primera ejecución**. |
+| `VITE_API_KEY_<FIELD>` | **Build** (Vite) | *(vacío)* | API key por campo (p. ej. `VITE_API_KEY_JAMENDO`); tiene prioridad sobre `VITE_DEFAULT_API_KEYS`. |
 
-> En **Vercel**, `VITE_DEFAULT_PROXY` se define en *Dashboard → Settings → Environment Variables* (se lee en el build, no de un `.env` del repo). En Docker, con `docker build --build-arg VITE_DEFAULT_PROXY=...`.
+> En **Vercel**, las `VITE_*` se definen en *Dashboard → Settings → Environment Variables* (se leen en el build, no de un `.env` del repo). En Docker, se pasan como build args (`docker build --build-arg ...`) o vía `docker-compose.yml` (que interpola `.env` automáticamente). Las `RELAY_*`/`PORT` son runtime y en Docker van en `environment`.
+
+> **API keys desde env — seguridad**: las `VITE_*` quedan visibles en el bundle JS que recibe cualquier visitante. Úsalas solo para **instancias privadas/self-host** o para claves **no secretas** (el `client_id` de Jamendo es público). Para instancias públicas, deja que cada usuario ponga su propia key en *Settings → API Keys* (se guarda en IndexedDB, por usuario y navegador). El seed solo ocurre la primera vez: en cuanto el usuario guarda Settings, sus valores ganan. Detalle del mecanismo en [`api-keys.md`](./api-keys.md).
 
 ---
 
@@ -106,6 +110,14 @@ El `Dockerfile` compila la app y el servidor Node (`server/index.ts`), que sirve
    ```bash
    docker build --build-arg VITE_DEFAULT_PROXY="https://api.allorigins.win/raw?url=" -t scrp-music .
    ```
+
+   Para preconfigurar API keys (opcional, solo primera ejecución):
+
+   ```bash
+   docker build --build-arg 'VITE_DEFAULT_API_KEYS={"jamendo":"abc123"}' -t scrp-music .
+   ```
+
+   Con **Docker Compose**, las `VITE_*` y `RELAY_ENABLED`/`PORT` se leen del `.env` local automáticamente (el `docker-compose.yml` las mapea a build args / environment), así que basta con ponerlas en `.env` y ejecutar `docker compose up -d --build`.
 
 2. **Arrancar el contenedor**:
 

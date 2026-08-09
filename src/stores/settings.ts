@@ -21,6 +21,31 @@ const DEFAULT: UserSettings = {
   apiKeys: {},
 }
 
+function envApiKeys(): Record<string, string> {
+  const keys: Record<string, string> = {}
+  const env = import.meta.env as Record<string, unknown>
+
+  const json = env.VITE_DEFAULT_API_KEYS
+  if (typeof json === 'string' && json) {
+    try {
+      const parsed = JSON.parse(json) as Record<string, unknown>
+      for (const [field, value] of Object.entries(parsed)) {
+        if (typeof value === 'string' && value) keys[field] = value
+      }
+    } catch {
+      // noop
+    }
+  }
+
+  for (const [name, value] of Object.entries(env)) {
+    if (name.startsWith('VITE_API_KEY_') && typeof value === 'string' && value) {
+      keys[name.replace('VITE_API_KEY_', '').toLowerCase()] = value
+    }
+  }
+
+  return keys
+}
+
 export const useSettingsStore = create<SettingsStore>((set, get) => ({
   settings: DEFAULT,
   loaded: false,
@@ -32,8 +57,9 @@ export const useSettingsStore = create<SettingsStore>((set, get) => ({
       setProxyUrl(merged.proxyUrl)
       set({ settings: merged, loaded: true })
     } else {
-      setProxyUrl(DEFAULT.proxyUrl)
-      set({ loaded: true })
+      const seeded = { ...DEFAULT, apiKeys: envApiKeys() }
+      setProxyUrl(seeded.proxyUrl)
+      set({ settings: seeded, loaded: true })
     }
   },
 
