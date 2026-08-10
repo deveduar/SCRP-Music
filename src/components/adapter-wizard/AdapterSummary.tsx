@@ -55,8 +55,8 @@ export function AdapterSummary({ def }: { def: AdapterDefinition }) {
         <span
           className={`ml-auto text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded-full border shrink-0 ${
             def.kind === 'api'
-              ? 'bg-cyan-500/10 text-cyan-400 border-cyan-500/30'
-              : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+              ? 'bg-chip-cyan-bg text-chip-cyan-text border-chip-cyan-text/30'
+              : 'bg-btn-amber-bg text-btn-amber-text border-btn-amber-text/30'
           }`}
         >
           {def.kind === 'api' ? 'JSON API' : 'HTML'}

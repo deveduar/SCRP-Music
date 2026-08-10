@@ -165,7 +165,7 @@ export function AiSourceForm({
       {fetching ? (
         <p className="text-xs text-content-muted">Fetching the URL(s) (direct → relay → proxy)…</p>
       ) : fetchError ? (
-        <p className="text-xs text-red-400">
+        <p className="text-xs text-chip-red-text">
           {fetchError} If a page can't be reached, inspect it (F12 → Network → response) and paste the
           HTML/JSON below instead.
         </p>
@@ -181,7 +181,7 @@ export function AiSourceForm({
         </p>
       )}
       {shellDetected && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-400">
+        <div className="rounded-lg border border-btn-amber-text/30 bg-btn-amber-bg px-3 py-2 text-xs text-btn-amber-text">
           This page is rendered with JavaScript — the sample is only the page shell and has no list of
           items. Use a URL that shows the actual list (a playlist, a search page or a list page), or
           inspect the page (F12 → Network → Fetch/XHR) and paste its JSON as the sample.

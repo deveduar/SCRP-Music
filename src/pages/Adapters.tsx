@@ -91,7 +91,7 @@ export function Adapters() {
   const [genreLimit, setGenreLimit] = useState<'all' | '10' | '1'>('10')
   const [savedFlash, setSavedFlash] = useState<string | null>(null)
   const [viewing, setViewing] = useState<AdapterDefinition | null>(null)
-  const [advanced, setAdvanced] = useState(true)
+  const [advanced, setAdvanced] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [jsonText, setJsonText] = useState(() => {
     const f = loadDraftForm()
@@ -186,7 +186,7 @@ export function Adapters() {
     setTestResult(null)
     setSavedFlash(null)
     setViewing(null)
-    setAdvanced(true)
+    setAdvanced(false)
     setJsonDirty(false)
     setJsonText(JSON.stringify(formToDefinition(f), null, 2))
     setWizardOpen(true)
@@ -200,7 +200,7 @@ export function Adapters() {
     setTestResult(null)
     setSavedFlash(null)
     setViewing(null)
-    setAdvanced(true)
+    setAdvanced(false)
     setJsonDirty(false)
     setJsonText('')
     setWizardOpen(true)
@@ -471,7 +471,7 @@ export function Adapters() {
                   <span
                     className={`text-[9px] font-semibold uppercase px-1.5 py-0.5 rounded-full shrink-0 ${
                       custom
-                        ? 'bg-green-500/10 text-green-400 border border-green-500/30'
+                        ? 'bg-chip-green-bg text-chip-green-text border border-chip-green-text/30'
                         : 'bg-surface-tertiary text-content-muted border border-border-main'
                     }`}
                   >
@@ -499,7 +499,7 @@ export function Adapters() {
                       </button>
                       <button
                         onClick={() => handleDelete(d)}
-                        className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors cursor-pointer"
+                        className="flex items-center gap-1 text-xs text-btn-red-text hover:text-btn-red-hover transition-colors cursor-pointer"
                       >
                         <Trash2 size={11} />
                         Delete
@@ -620,8 +620,8 @@ export function Adapters() {
                 <span
                   className={`ml-auto text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
                     effectiveValid
-                      ? 'bg-green-500/10 text-green-400 border-green-500/30'
-                      : 'bg-red-500/10 text-red-400 border-red-500/30'
+                      ? 'bg-chip-green-bg text-chip-green-text border-chip-green-text/30'
+                      : 'bg-chip-red-bg text-chip-red-text border-chip-red-text/30'
                   }`}
                 >
                   {effectiveValid ? 'Valid' : `${effectiveErrors.length} issue(s)`}
