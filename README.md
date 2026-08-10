@@ -29,7 +29,7 @@ A **single-page application** (SPA) for browsing, searching, and managing music 
 - Recent Jobs section showing +N new/updated per job
 - Export scraped results as JSON
 - **Two adapter modes**: HTML scrapers with page detection, delays and optional proxy; API adapters using JSON endpoints with dynamic API keys — UI auto-adapts to adapter kind
-- **No-code adapter builder** — a dedicated **Adapters** page with a wizard to create adapters without touching code: form steps (Basics, Transport, Genres, Pagination, Structure, URLs, Field Mapping), a JSON editor with live validation, live testing, and an AI copy-prompt helper that downloads a real sample of the source and generates a ready-to-paste adapter JSON
+- **No-code adapter builder** — a dedicated **Adapters** page with a wizard to create adapters without touching code: form steps (Basics, Transport, Genres, Pagination, Structure, URLs, Field Mapping), a JSON editor with live validation, live testing (**Test live** + **Test genres**, which verifies each genre's page-1 URL to catch broken slugs), and an AI copy-prompt helper that downloads a real sample of the source and generates a ready-to-paste adapter JSON
 
 ### Persistent State (IndexedDB via Dexie)
 - **Favorites** and **listen status** per release
@@ -123,7 +123,7 @@ The app runs entirely in the browser — no backend required. All data is stored
 - **Selection state**: `batch_selection_mode` and `batch_selected_ids` in `localStorage`
 - **User settings**: stored in IndexedDB
 - **API Keys**: stored in IndexedDB (Settings → API Keys), dynamic per-adapter (e.g. `myAdapter: "client_id"`). Required for API-based adapters.
-- **Environment variables**: see [`.env.example`](./.env.example) — `RELAY_ENABLED` (runtime), `PORT` (Docker/Node server), `VITE_DEFAULT_PROXY` (build-time)
+- **Environment variables**: see [`.env.example`](./.env.example) — `RELAY_ENABLED` (runtime), `PORT` (Docker/Node server), `VITE_DEFAULT_PROXY` (build-time), `VITE_DEFAULT_API_KEYS` / `VITE_API_KEY_<FIELD>` (build-time, seed API keys into Settings — see [api-keys.md](./documentation/api-keys.md))
 
 ## Deployment
 

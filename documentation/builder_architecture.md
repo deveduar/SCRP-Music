@@ -39,6 +39,7 @@ AiSourceForm (Listing URL + Detail URL + opciones)
 | `src/services/adapter-field-meta.ts` | Catálogo de campos y estrategias de extracción (metadatos de UI) |
 | `src/services/adapter-engine.ts` | Motor: `createAdapterFromDef`, `getFetchFunction`, paginación, extracción |
 | `src/services/adapter-tester.ts` | `testAdapter` (Test live) |
+| `src/services/adapter-genre-tester.ts` | `testGenres` — comprueba la URL de página 1 de cada género (Test genres) |
 | `src/services/adapter-registry.ts` | Registro de definiciones (builtins + custom) |
 | `src/services/cors-proxy.ts` | Transporte: `fetchWithProxy` (proxy), `fetchDirectRelay` (relay), `isRelayAvailable` |
 | `src/services/fetch-info.ts` | `getFetchInfo` — describe qué modo usa cada adaptador (UI) |

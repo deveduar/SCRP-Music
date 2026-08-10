@@ -16,22 +16,28 @@ Tres formas de empezar:
 
 El editor se divide en dos bloques verticales:
 
-1. **JSON & Test** (arriba, siempre visible): validación, editor JSON, resumen, Test y Save.
+1. **Panel principal** (orden, de arriba a abajo): validación, **Adapter overview**,
+   **JSON editor** (colapsable, cerrado por defecto), fila de acciones
+   **[Generate with AI]** + **[Paste from clipboard]**, panel de IA (formulario de fuente y
+   prompt colapsado), y los botones **Test live**, **Test genres** y **Save adapter**.
 2. **Advanced** (colapsable, cerrado por defecto): el formulario completo con sub-pestañas
    **Form** y **Field Mapping**.
 
 ---
 
-## 1. JSON & Test
+## 1. Panel principal
 
-Es el panel principal.
+Es el panel que ves al abrir el editor.
 
 ### Generador con IA
-**Generate with AI (copy a prompt)** te pide lo mínimo: la **URL del listado** (la página o API que
+**Generate with AI** te pide lo mínimo: la **URL del listado** (la página o API que
 muestra los releases) y, opcionalmente, la **URL de una página de ítem** (un release suelto). Pulsa
 **Download samples** y la app descarga una **muestra real** de cada URL (intenta directo → relay →
 proxy) y las mete en el prompt. La IA **analiza los datos reales** y decide ella la estructura: `kind`,
 `resultsPath`, selectors, campos, paginación y descargas.
+
+El prompt generado aparece **colapsado** bajo el desplegable **"Show prompt"**, debajo del formulario
+de la fuente; ábrelo para copiarlo.
 
 - No necesitas saber nada técnico: solo la URL del listado (y opcionalmente la de un ítem suelto, o
   notas en tus palabras).
@@ -63,8 +69,10 @@ La barra de estado muestra **Definition is valid** (verde) o la lista de errores
 Los botones **Test live** y **Save adapter** se activan solo si la definición es válida.
 
 ### Editor JSON
-- **Paste from clipboard** lee el JSON del portapapeles (si el navegador no lo permite, enfoca el
-  editor para que pegues con Ctrl/Cmd+V).
+El **JSON editor** es un desplegable (chevron, cerrado por defecto). A su lado, en la fila de acciones,
+vive **Paste from clipboard**, **siempre visible** (funciona aunque el editor esté cerrado): lee el
+JSON del portapapeles, abre el editor y lo pega (si el navegador no lo permite, enfoca el editor para
+que pegues con Ctrl/Cmd+V).
 - Si lo **editas**, la validación se calcula sobre tu JSON: si es válido, **Test live** y **Save**
   usan TU JSON y la barra se pone verde.
 - **Auto-sync**: un JSON válido que pegues/edites **se carga automáticamente en los formularios
@@ -76,9 +84,9 @@ Los botones **Test live** y **Save adapter** se activan solo si la definición e
 > corregirlo — no guardará una versión rota.
 
 ### Resumen
-Debajo del editor aparece **Adapter overview**: un vistazo compacto del adaptador (tipo, transporte,
-géneros, paginación, campos y descargas). Se actualiza en vivo y sirve para verificar de un vistazo
-lo que se va a guardar.
+Justo debajo de la validación aparece **Adapter overview**: un vistazo compacto del adaptador (tipo,
+transporte, géneros, paginación, campos y descargas). Se actualiza en vivo y sirve para verificar de
+un vistazo lo que se va a guardar.
 
 ### Test & Save
 - **Test live**: scrapea el primer género / primera página (máx. 5 releases). Comprueba detección de
@@ -94,6 +102,11 @@ lo que se va a guardar.
     «Attention Required», la app muestra un panel ámbar con botones **"Switch to CORS proxy"** y
     **"Switch to direct"** — el modo relay usa un fetch server-side que Cloudflare rechaza con 403.
     Cambia de modo y pulsa **Test live** otra vez.
+- **Test genres**: comprueba la **URL de página 1 de cada género** usando el transporte del adaptador.
+  Selector de alcance **All / 10 / 1** (por defecto 10). Reporta un resumen (n ok / n fallidos) y cada
+  género con su URL real (clic para abrirla) y estado (`OK` / `HTTP <n>` / `error`). Detecta géneros
+  rotos antes de scrapear — típico de un slug adivinado por la IA en vez de copiado literal
+  (p. ej. `drum-bass-dnb` cuando la URL real es `/genre/drum-bass/`).
 - **Save adapter**: guarda en tu navegador y lo activa.
 
 ---
@@ -162,6 +175,7 @@ usa la estrategia por campo para un valor puntual y la sección para valores glo
 | API: falla CORS | sin CORS | `CORS proxy` o `Direct` si es abierto |
 | Solo página 1, no detecta el resto | `html-last-page` sin regex o regex mal | Regex correcto `page/([0-9]+)/` |
 | `api-count` da `maxPage=1` | campo de total mal | Ajusta `countFieldPath` (p. ej. `numFound`) |
+| Género da 404 al scrapear (p. ej. `drum-bass-dnb` en vez de `drum-bass`) | el slug se re-derivó de la label en vez de copiarse | Usa **Test genres** para localizar el género roto; copia el slug **literal** (de `STRUCTURE HINTS` o del nav del sitio) |
 | ID duplicados en cada scrape | id basado en datos que cambian | Usa `sha1-id` sobre un campo único estable |
 
 ## Notas técnicas breves
@@ -242,10 +256,12 @@ En la página **Adapters** pulsa **Paste JSON**: se abre el paso Test & Save con
 listo. Pega el JSON de abajo → se valida al instante (barra verde) → **Test live** y **Save adapter**
 funcionan con tu JSON, sin tocar el formulario.
 
-## Atajo 2: "Advanced" → "Load into wizard form"
+## Atajo 2: pegar el JSON en el editor → el formulario se rellena solo
 
-En el paso Test & Save, abre **Show advanced JSON**, pega el JSON y pulsa **Load into wizard form**.
-Así el wizard se rellena solo con todos los pasos.
+En el panel principal abre **Show JSON editor** (o usa **Paste from clipboard**) y pega el JSON. Un
+JSON válido se **carga automáticamente en el formulario del wizard** (auto-sync): los pasos de
+Advanced quedan rellenos. Regla «lo que editas por última vez gana»: si después tocas un campo del
+formulario, el JSON se regenera desde el formulario.
 
 ```json
 {
