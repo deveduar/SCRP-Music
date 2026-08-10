@@ -10,10 +10,12 @@ import {
   Check,
   ClipboardPaste,
   ExternalLink,
+  Globe,
 } from 'lucide-react'
 import type { AdapterParseResult, AdapterValidationError } from '../../services/adapter-schema'
 import type { AdapterDefinition } from '../../types/adapter-definition'
 import type { AdapterTestResult } from '../../services/adapter-tester'
+import type { GenreUrlCheck } from '../../services/adapter-genre-tester'
 import { AdapterSummary } from './AdapterSummary'
 import { AiSourceForm } from './AiSourceForm'
 import { buildAiPrompt, emptyAiSourceInput } from '../../services/ai-prompt'
@@ -37,6 +39,11 @@ export function StepTestSave({
   onSetFetchMode,
   onTest,
   onSave,
+  genreTesting,
+  genreResults,
+  genreLimit,
+  onGenreLimitChange,
+  onTestGenres,
 }: {
   valid: boolean
   errors: AdapterValidationError[]
@@ -53,6 +60,11 @@ export function StepTestSave({
   onSetFetchMode?: (mode: 'relay' | 'proxy' | 'direct') => void
   onTest: () => void
   onSave: () => void
+  genreTesting: boolean
+  genreResults: GenreUrlCheck[] | null
+  genreLimit: 'all' | '10' | '1'
+  onGenreLimitChange: (v: 'all' | '10' | '1') => void
+  onTestGenres: () => void
 }) {
   const [aiOpen, setAiOpen] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -358,6 +370,76 @@ export function StepTestSave({
                 ))}
               </div>
             )}
+          </div>
+        )}
+      </div>
+
+      {/* Test genres */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={onTestGenres}
+            disabled={!valid || genreTesting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-surface-secondary border border-border-main text-content-secondary hover:text-content transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <Globe size={12} />
+            {genreTesting ? 'Testing genres…' : 'Test genres'}
+          </button>
+          <div className="flex items-center gap-1 text-[11px]">
+            <span className="text-content-muted">Scope:</span>
+            {(['all', '10', '1'] as const).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => onGenreLimitChange(v)}
+                className={`px-2 py-0.5 rounded text-[11px] border transition-colors cursor-pointer ${
+                  genreLimit === v
+                    ? 'bg-accent/15 text-accent border-accent/30'
+                    : 'bg-surface-secondary text-content-muted border-border-main hover:text-content'
+                }`}
+              >
+                {v === 'all' ? 'All' : v}
+              </button>
+            ))}
+          </div>
+        </div>
+        <p className="text-xs text-content-muted">
+          Checks each genre&apos;s page-1 URL with the adapter&apos;s transport — catches broken genre paths
+          (e.g. a 404 because the slug was guessed instead of copied).
+        </p>
+        {genreResults && (
+          <div className="rounded-lg border border-border-main bg-surface-secondary p-3 space-y-1.5 text-xs">
+            <div className="font-medium text-content-secondary">
+              {genreResults.filter((r) => r.ok).length} ok, {genreResults.filter((r) => !r.ok).length} failed
+              of {genreResults.length} tested
+            </div>
+            {genreResults.map((r) => (
+              <div key={r.id} className="flex items-center gap-2 text-content-secondary">
+                <span
+                  className={`w-1.5 h-1.5 rounded-full shrink-0 ${r.ok ? 'bg-green-400' : 'bg-red-400'}`}
+                />
+                <span className="truncate min-w-0">{r.label}</span>
+                {r.url && (
+                  <a
+                    href={r.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="ml-auto shrink-0 inline-flex items-center gap-1 font-mono text-accent hover:text-accent-hover max-w-[45%] min-w-0"
+                    title={r.url}
+                  >
+                    <span className="truncate">{r.url}</span>
+                    <ExternalLink size={10} className="shrink-0" />
+                  </a>
+                )}
+                <span
+                  className={`shrink-0 ${r.ok ? 'text-green-400' : 'text-red-400'}`}
+                  title={r.ok ? undefined : r.error}
+                >
+                  {r.ok ? 'OK' : r.status ? `HTTP ${r.status}` : 'error'}
+                </span>
+              </div>
+            ))}
           </div>
         )}
       </div>

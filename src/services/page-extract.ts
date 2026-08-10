@@ -491,7 +491,7 @@ export function buildHintsText(a: PageAnalysis): string {
   }
   if (a.genrePath) {
     lines.push(
-      `The Listing URL is itself a genre page: pattern ${a.genrePath.pattern} (current id: ${a.genrePath.currentId}). Use {genreId} in urlTemplates.page / firstPage, and fill genres.items with the candidates below (id = slug, path = the genre path part, label = menu label).`,
+      `The Listing URL is itself a genre page: pattern ${a.genrePath.pattern} (current id: ${a.genrePath.currentId}). Use {genreId} in urlTemplates.page / firstPage. Fill genres.items from the candidates below: id = the last path segment of the URL (the slug), path = that same slug (only needed if the template contains {path}), label = the menu label. Copy the slug EXACTLY as shown — never rebuild it from the label.`,
     )
   }
   if (a.genres.length > 0) {
@@ -499,7 +499,7 @@ export function buildHintsText(a: PageAnalysis): string {
     const relevant = prefix ? a.genres.filter((g) => g.path.startsWith(prefix)) : a.genres
     const rest = prefix ? a.genres.filter((g) => !g.path.startsWith(prefix)) : []
     const print = (list: GenreCandidate[]) =>
-      list.map((g) => `${g.label} → ${g.path}`).join('\n')
+      list.map((g) => `${g.label} → ${g.path.replace('{id}', g.id)}`).join('\n')
     if (relevant.length > 0) {
       const header = a.genrePath
         ? `Candidate genres for ${a.genrePath.pattern} (found in the site navigation):`

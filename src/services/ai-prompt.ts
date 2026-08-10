@@ -150,10 +150,13 @@ const SAMPLE_GUIDANCE = `=== HOW TO BUILD THE ADAPTER ===
 - The STRUCTURE HINTS block was auto-detected from the real page by the app (repeated item blocks,
   candidate selectors, JSON-LD, microdata, OpenGraph, feeds). You may use it, but verify every selector
   against the REAL DATA SAMPLE before using it.
-- STRUCTURE HINTS also lists the candidate genres read from the site's navigation menus (label → /prefix/{id}/)
-  and, when the Listing URL is itself a genre page, the genre URL pattern with {genreId} (e.g. /genre/{genreId}/).
-  Fill genres.items ("hardcoded") from those candidates: id = slug, path = the genre path part ({genreId} value),
-  label = the menu label. Cross-check the path segment against the Listing URL structure before using it.
+- STRUCTURE HINTS lists the candidate genres read from the site's navigation menus with their REAL URLs
+  (e.g. "Drum & Bass (DnB) → /genre/drum-bass/"). When the Listing URL is itself a genre page it also shows the
+  genre URL pattern (e.g. /genre/{genreId}/). Fill genres.items ("hardcoded") from those candidates:
+  id = the last path segment of the URL (the slug), path = that same slug (only used when the template contains
+  {path}), label = the menu label. COPY the slug EXACTLY as it appears in the URL — never rebuild it from the label
+  (e.g. the label "Drum & Bass (DnB)" is /genre/drum-bass/, NOT /genre/drum-bass-dnb/).
+  If a candidate has no URL you can verify, omit that genre instead of guessing its path.
 - A sample may be JSON extracted from the page's embedded data (JSON-LD or JS payload) even though the page is HTML.
   In that case the page is JavaScript-rendered (or relies on embedded data) and the engine scrapes server-rendered HTML,
   so do NOT build an HTML adapter with invented selectors. Prefer the candidate selectors from STRUCTURE HINTS when they
@@ -168,13 +171,14 @@ const HARD_RULES = `=== HARD RULES ===
 4. If the source has NO pagination, set detection "client-side" and mode "client-side".
 5. If the response is already a JSON array, leave "resultsPath" EMPTY (do not invent a path).
 6. downloads: only include if the sample shows an audio/stream URL (API field) or download links (HTML detail page). Otherwise omit entirely.
-7. genres: use "hardcoded" with the real genres of the source. Prefer the candidates from STRUCTURE HINTS (they were read from the real site navigation and the Listing URL pattern); "query" goes into {query}, "path" goes into {path} (the genre's URL path segment). If it is a single list, one "all" genre with an empty query is fine.
+7. genres: use "hardcoded" with the real genres of the source. Prefer the candidates from STRUCTURE HINTS — they show the REAL genre URLs (e.g. "Drum & Bass (DnB) → /genre/drum-bass/"). Copy the slug (last path segment) into genres.items[].id VERBATIM; set path to that same slug only if urlTemplates contains {path}; "query" goes into {query}. NEVER rebuild the slug from the label (e.g. the label "Drum & Bass (DnB)" is /genre/drum-bass/, not "drum-bass-dnb"). If it is a single list, one "all" genre with an empty query is fine.
 8. id must be stable: prefer sha1 over a raw field.
 9. For kind="api" do NOT use "selectors"; for kind="html" do NOT use "api".
 10. Output ONLY the JSON. No markdown fences, no explanation.
 11. The STRUCTURE HINTS block was extracted from the real page — you may use its candidate selectors, but verify each one exists in the REAL DATA SAMPLE first. Never invent selectors that are not present in the sample.
 12. When pagination.detection is "html-last-page", you MUST include pagination.lastPageRegex: a regex with one capture group that matches the biggest page number in the pagination links of the REAL DATA SAMPLE (e.g. "page/([0-9]+)/" for /page/N/). A definition with detection "html-last-page" but without lastPageRegex is rejected by the app.
-13. fetch.mode must equal the "Sample transport" stated in MY SOURCE (direct/relay/proxy). Never default HTML sites to "relay" — the relay is a server-side fetch that Cloudflare-protected sites reject with HTTP 403.`
+13. fetch.mode must equal the "Sample transport" stated in MY SOURCE (direct/relay/proxy). Never default HTML sites to "relay" — the relay is a server-side fetch that Cloudflare-protected sites reject with HTTP 403.
+14. NEVER invent a genre path. genres.items[].id must be a slug shown verbatim in STRUCTURE HINTS. If a genre's URL is missing or unverifiable, omit that genre (or ask the user) — a wrong path makes that genre fail with a 404 when scraped.`
 
 function effectiveKindLabel(input: AiSourceInput): string {
   if (input.kind !== 'auto') return input.kind === 'api' ? 'api (user override)' : 'html (user override)'

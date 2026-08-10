@@ -1,5 +1,18 @@
-import { useEffect, useMemo, useState } from 'react'
-import { Plus, Pencil, Copy, Trash2, Eye, X, Wand2, FileJson2, ClipboardPaste, ChevronRight } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Plus,
+  Pencil,
+  Copy,
+  Trash2,
+  Eye,
+  X,
+  Wand2,
+  FileJson2,
+  ClipboardPaste,
+  ChevronRight,
+  Download,
+  Upload,
+} from 'lucide-react'
 import { useScraperStore } from '../stores/scraper'
 import { useSettingsStore } from '../stores/settings'
 import { useNetworkStore } from '../stores/network'
@@ -14,8 +27,10 @@ import { validateAdapterDefinition, parseAdapterJson } from '../services/adapter
 import { createAdapterFromDef } from '../services/adapter-engine'
 import { testAdapter } from '../services/adapter-tester'
 import type { AdapterTestResult } from '../services/adapter-tester'
+import { testGenres } from '../services/adapter-genre-tester'
+import type { GenreUrlCheck } from '../services/adapter-genre-tester'
 import { getFetchInfo } from '../services/fetch-info'
-import { getCustomAdapter, saveCustomAdapter, deleteCustomAdapter } from '../storage/db'
+import { getCustomAdapter, getCustomAdapters, saveCustomAdapter, deleteCustomAdapter } from '../storage/db'
 import type { AdapterDefinition } from '../types/adapter-definition'
 import {
   emptyForm,
@@ -71,9 +86,13 @@ export function Adapters() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<AdapterTestResult | null>(null)
+  const [genreTesting, setGenreTesting] = useState(false)
+  const [genreResults, setGenreResults] = useState<GenreUrlCheck[] | null>(null)
+  const [genreLimit, setGenreLimit] = useState<'all' | '10' | '1'>('10')
   const [savedFlash, setSavedFlash] = useState<string | null>(null)
   const [viewing, setViewing] = useState<AdapterDefinition | null>(null)
   const [advanced, setAdvanced] = useState(true)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [jsonText, setJsonText] = useState(() => {
     const f = loadDraftForm()
     return f ? JSON.stringify(formToDefinition(f), null, 2) : ''
@@ -93,6 +112,7 @@ export function Adapters() {
 
   const patch = (p: Partial<AdapterFormState>) => {
     setJsonDirty(false)
+    setGenreResults(null)
     setForm((s) => ({ ...s, ...p }))
   }
 
@@ -208,6 +228,7 @@ export function Adapters() {
     if (!effectiveValid) return
     setTesting(true)
     setTestResult(null)
+    setGenreResults(null)
     try {
       const res = await testAdapter(effectiveDef)
       setTestResult(res)
@@ -224,6 +245,20 @@ export function Adapters() {
       })
     } finally {
       setTesting(false)
+    }
+  }
+
+  const handleTestGenres = async () => {
+    if (!effectiveValid) return
+    setGenreTesting(true)
+    setGenreResults(null)
+    try {
+      const limit = genreLimit === 'all' ? undefined : Number(genreLimit)
+      setGenreResults(await testGenres(effectiveDef, { limit }))
+    } catch (e) {
+      setGenreResults([{ id: '', label: 'Error', url: '', ok: false, error: (e as Error).message }])
+    } finally {
+      setGenreTesting(false)
     }
   }
 
@@ -288,6 +323,81 @@ export function Adapters() {
     reload()
   }
 
+  const handleDownloadJson = (d: AdapterDefinition) => {
+    const blob = new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `${d.id}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  const handleExportAdapters = async () => {
+    const entries = await getCustomAdapters()
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      adapters: entries.map((e) => e.def),
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = `scrp-music-adapters-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+
+  const handleImportAdapters = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    let imported = 0
+    let skipped = 0
+    let invalid = 0
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text) as unknown
+      let defs: unknown[] = []
+      if (Array.isArray(parsed)) {
+        defs = parsed
+      } else if (parsed && typeof parsed === 'object') {
+        const wrapper = parsed as { adapters?: unknown }
+        if (Array.isArray(wrapper.adapters)) {
+          defs = wrapper.adapters
+        } else {
+          defs = [parsed]
+        }
+      }
+      const now = new Date().toISOString()
+      for (const raw of defs) {
+        const v = validateAdapterDefinition(raw)
+        if (!v.ok || !v.def) {
+          invalid++
+          continue
+        }
+        const target = v.def
+        if (getBuiltinDefinition(target.id) || hasCustomDefinition(target.id)) {
+          skipped++
+          continue
+        }
+        await saveCustomAdapter({
+          id: target.id,
+          name: target.name,
+          def: target,
+          createdAt: now,
+          updatedAt: now,
+        })
+        registerCustomDefinition(target)
+        registerAdapter(createAdapterFromDef(target) as never)
+        imported++
+      }
+      reload()
+      alert(`Import finished: ${imported} imported, ${skipped} skipped (id already exists), ${invalid} invalid.`)
+    } catch (err) {
+      alert('Import failed: ' + (err as Error).message)
+    }
+    e.target.value = ''
+  }
+
   return (
     <div className="p-6 overflow-auto h-full space-y-4">
       <div className="flex items-center gap-2 mb-4">
@@ -307,14 +417,39 @@ export function Adapters() {
         <div className="bg-surface-card border border-border-main rounded-lg p-4 space-y-2">
           <div className="flex items-center justify-between mb-1">
             <h3 className="text-sm font-semibold text-content">Definitions</h3>
-            <button
-              onClick={() => startNew('empty')}
-              className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover cursor-pointer transition-colors"
-            >
-              <Plus size={12} />
-              New
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleExportAdapters}
+                className="flex items-center gap-1 text-xs text-content-secondary hover:text-content transition-colors cursor-pointer"
+                title="Export custom adapters as JSON"
+              >
+                <Download size={12} />
+                Export
+              </button>
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1 text-xs text-content-secondary hover:text-content transition-colors cursor-pointer"
+                title="Import adapters from JSON"
+              >
+                <Upload size={12} />
+                Import
+              </button>
+              <button
+                onClick={() => startNew('empty')}
+                className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover cursor-pointer transition-colors"
+              >
+                <Plus size={12} />
+                New
+              </button>
+            </div>
           </div>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json,application/json"
+            hidden
+            onChange={handleImportAdapters}
+          />
           <div className="text-[11px] text-content-muted -mt-1 mb-1">
             Built-ins are read-only. Use «Use as template» to create your own copy.
           </div>
@@ -417,16 +552,25 @@ export function Adapters() {
               <pre className="w-full max-h-96 overflow-auto bg-surface-input border border-border-main rounded-lg p-3 font-mono text-xs text-content">
                 {JSON.stringify(viewing, null, 2)}
               </pre>
-              <button
-                onClick={() => {
-                  handleUseAsTemplate(viewing)
-                  setViewing(null)
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-btn-cyan-bg text-btn-cyan-text border border-btn-cyan-text/20 hover:bg-btn-cyan-hover transition-colors cursor-pointer"
-              >
-                <Copy size={12} />
-                Use as template
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => {
+                    handleUseAsTemplate(viewing)
+                    setViewing(null)
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-btn-cyan-bg text-btn-cyan-text border border-btn-cyan-text/20 hover:bg-btn-cyan-hover transition-colors cursor-pointer"
+                >
+                  <Copy size={12} />
+                  Use as template
+                </button>
+                <button
+                  onClick={() => handleDownloadJson(viewing)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-surface-secondary border border-border-main text-content-secondary hover:text-content transition-colors cursor-pointer"
+                >
+                  <Download size={12} />
+                  Download JSON
+                </button>
+              </div>
             </div>
           ) : !wizardOpen ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
@@ -507,6 +651,11 @@ export function Adapters() {
                 onTest={handleTest}
                 onSave={() => handleSave(effectiveDef)}
                 savedFlash={savedFlash ?? undefined}
+                genreTesting={genreTesting}
+                genreResults={genreResults}
+                genreLimit={genreLimit}
+                onGenreLimitChange={setGenreLimit}
+                onTestGenres={handleTestGenres}
               />
 
               {/* Advanced (collapsible) */}

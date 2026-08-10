@@ -175,11 +175,13 @@ y **"Switch to direct"** (vía prop `onSetFetchMode`), y avisa de pulsar de nuev
   La firma de los bloques ignora clases "ruido" (post-IDs, `category-*`, `tag-*`, `artist-*`,
   `record_label-*`, flags de WordPress) para que ítems con clases distintas por post se agrupen.
 - `detectGenres(doc, baseUrl)` lee la navegación del sitio (nav/header/menús) sobre el HTML crudo y
-  extrae candidatos `label → /prefix/{id}/` (descarta labels/artists/tags, utilidades y enlaces de
+  extrae candidatos con su slug real (`label` + último segmento de la URL, p. ej.
+  `Drum & Bass (DnB)` → `/genre/drum-bass/`; descarta labels/artists/tags, utilidades y enlaces de
   paginación numéricos). `deriveGenrePathFromUrl(baseUrl)` detecta si la Listing URL es una página de
   género (p. ej. `/genre/new-techno/` → patrón `/genre/{genreId}/`) y se cruza con los candidatos del
   mismo prefijo.
-- `buildHintsText` → bloque `STRUCTURE HINTS` con selectores candidatos, géneros y patrón de URL.
+- `buildHintsText` → bloque `STRUCTURE HINTS` con selectores candidatos, géneros (con URL real resuelta,
+  no la plantilla `{id}`) y patrón de URL.
 
 ### El prompt (`buildAiPrompt`)
 - `AiSourceInput` transporta `url, detailUrl, kind, sampleText, sampleKind, sampleMode,
@@ -196,6 +198,11 @@ y **"Switch to direct"** (vía prop `onSetFetchMode`), y avisa de pulsar de nuev
 - HARD RULE 13: igual mandato (mirror del transporte). Otras reglas clave: nunca inventar URLs/baseUrl,
   no añadir `statusFieldPath` sin status real, array-raíz → `resultsPath` vacío, `downloads` solo si hay
   evidencia, `id` estable vía sha1, `lastPageRegex` obligatorio con `html-last-page`, output solo JSON.
+  HARD RULE 14 + guidance de géneros: copiar el slug **literal** de `STRUCTURE HINTS` (p. ej.
+  `Drum & Bass (DnB)` → `drum-bass`, no `drum-bass-dnb`); nunca re-derivar el path desde la label.
+- `testGenres` (`adapter-genre-tester.ts`): comprueba la URL de página 1 de cada género (transporte del
+  adapter) y reporta OK/HTTP/error — botón **Test genres** en el wizard junto a Test live, con selector
+  de alcance (All / 10 / 1).
 - Tests: `npm test` (vitest + jsdom), `src/services/source-sample.test.ts` (25 casos:
   kind detection, región lista/sidebar, truncado boundary-aware, JSON-LD, shells, géneros, hints,
   regresión de agrupado de ítems de WordPress con clases ruidosas).
