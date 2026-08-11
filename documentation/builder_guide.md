@@ -4,11 +4,15 @@ El **builder de adaptadores** (página **Adapters**) te permite conectar una fue
 (un blog de música, una API de discos…) sin escribir código. Se configura con formularios,
 se prueba en vivo y se guarda en tu navegador (IndexedDB). No se toca ningún fichero del proyecto.
 
-Tres formas de empezar:
+El botón **New** del panel **Definitions** (a la derecha de Export/Import) — o la propia página cuando no
+hay ningún borrador — abre una pantalla de inicio con las opciones para crear un adaptador:
 
-1. **Start from scratch** — rellenas el formulario a mano.
-2. **Paste JSON** — pegas un JSON de adaptador (p. ej. el generado por una IA) y lo validas/guardas.
-3. **Use as template** — copias un adaptador existente (built-in o tuyo) y lo adaptas.
+1. **Generate with AI** — pegas la URL del listado, la app descarga una muestra real y genera un
+   prompt copiable para la IA (abre el wizard con el generador IA ya expandido).
+2. **Start from scratch** (o plantillas **HTML**/**API**) — rellenas el formulario a mano o desde una
+   plantilla predefinida.
+3. **Paste JSON** — pegas un JSON de adaptador (p. ej. el generado por una IA) y lo validas/guardas.
+4. **Use as template** (desde la lista) — copias un adaptador existente (built-in o tuyo) y lo adaptas.
 
 ---
 
@@ -108,6 +112,30 @@ un vistazo lo que se va a guardar.
   rotos antes de scrapear — típico de un slug adivinado por la IA en vez de copiado literal
   (p. ej. `drum-bass-dnb` cuando la URL real es `/genre/drum-bass/`).
 - **Save adapter**: guarda en tu navegador y lo activa.
+
+### Borrador, sesión y cambios sin guardar
+
+Mientras el editor está abierto, todo el estado del wizard se **auto-guarda como borrador**
+(`localStorage`) a los pocos segundos de cada cambio: formulario, editor JSON, los datos del
+**generador con IA** (URLs de listing/ítem, muestras descargadas o pegadas), y el contexto de la sesión
+(si estás **creando** o **editando** un adaptador, y si el editor JSON / panel IA estaban abiertos). Por
+eso puedes cerrar la pestaña, recargar o irte a otra página y volver — el editor se reabre exactamente
+donde lo dejaste: si estabas **editando** un adaptador, vuelve como **«Edit «nombre»»** (sin botón
+Close, con el adaptador resaltado en la lista), y si estabas **creando**, como adaptador nuevo.
+
+Editar (**Edit**) o usar **Use as template** carga una **copia de trabajo** en el editor y **no** cambia
+el adaptador activo: el badge **Active** de la lista solo cambia al pulsar **Save adapter** (guarda y
+activa). Mientras tanto puedes alternar entre editables sin problema, pero:
+
+- El chip **«Sin guardar»** (ámbar) aparece en la cabecera del editor mientras haya cambios que aún no
+  has guardado; desaparece al guardar y vuelve si vuelves a editar.
+- Si intentas **cerrar o recargar** la pestaña con cambios sin guardar, el navegador te avisa antes de
+  salir (el borrador se escribe al momento, así que nada se pierde).
+- Si intentas **saltar a otro adaptador** (Edit, Use as template) o pulsar **New** con cambios sin
+  guardar, la app te pregunta antes de descartarlos.
+- El botón **Close** (X) de la cabecera descarta el borrador y vuelve a la pantalla de inicio — solo
+  aparece al **crear** un adaptador nuevo; al **editar** uno existente no se muestra, porque cerrar
+  descartaría la edición (se sale guardando o navegando).
 
 ---
 

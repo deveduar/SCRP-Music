@@ -7,6 +7,7 @@ import {
   Eye,
   X,
   Wand2,
+  Sparkles,
   FileJson2,
   ClipboardPaste,
   ChevronRight,
@@ -41,6 +42,8 @@ import {
   normalizeForm,
 } from '../services/adapter-form'
 import type { AdapterFormState } from '../services/adapter-form'
+import { emptyAiSourceInput } from '../services/ai-prompt'
+import type { AiSourceInput } from '../services/ai-prompt'
 import type { IdCollision } from '../components/adapter-wizard/StepBasics'
 import { StepForm } from '../components/adapter-wizard/StepForm'
 import { StepFields } from '../components/adapter-wizard/StepFields'
@@ -48,26 +51,68 @@ import { StepTestSave } from '../components/adapter-wizard/StepTestSave'
 
 const DRAFT_KEY = 'adapter_wizard_draft'
 
-type AdvTab = 'form' | 'fields'
+interface WizardDraft {
+  form: AdapterFormState
+  aiInput: AiSourceInput
+  jsonText: string
+  jsonDirty: boolean
+  editingId: string | null
+  dirty: boolean
+  advanced: boolean
+  aiOpen: boolean
+}
 
-const ADV_TABS: { id: AdvTab; label: string }[] = [
-  { id: 'form', label: 'Form' },
-  { id: 'fields', label: 'Field Mapping' },
-]
-
-function loadDraftForm(): AdapterFormState | null {
+function loadDraft(): WizardDraft | null {
   const draft = localStorage.getItem(DRAFT_KEY)
   if (!draft) return null
   try {
-    const parsed = JSON.parse(draft)
+    const parsed = JSON.parse(draft) as {
+      form?: unknown
+      aiInput?: AiSourceInput
+      jsonText?: unknown
+      jsonDirty?: unknown
+      editingId?: unknown
+      dirty?: unknown
+      advanced?: unknown
+      aiOpen?: unknown
+      kind?: unknown
+    }
+    if (parsed && typeof parsed === 'object' && typeof parsed.form === 'object' && parsed.form !== null && typeof (parsed.form as { kind?: unknown }).kind === 'string') {
+      return {
+        form: normalizeForm(parsed.form),
+        aiInput: parsed.aiInput ?? emptyAiSourceInput(),
+        jsonText: typeof parsed.jsonText === 'string' ? parsed.jsonText : '',
+        jsonDirty: parsed.jsonDirty === true,
+        editingId: typeof parsed.editingId === 'string' ? parsed.editingId : null,
+        dirty: parsed.dirty === true,
+        advanced: parsed.advanced === true,
+        aiOpen: parsed.aiOpen === true,
+      }
+    }
     if (parsed && typeof parsed === 'object' && typeof parsed.kind === 'string') {
-      return normalizeForm(parsed)
+      return {
+        form: normalizeForm(parsed),
+        aiInput: emptyAiSourceInput(),
+        jsonText: '',
+        jsonDirty: false,
+        editingId: null,
+        dirty: false,
+        advanced: false,
+        aiOpen: false,
+      }
     }
   } catch {
     /* ignore corrupted draft */
   }
   return null
 }
+
+type AdvTab = 'form' | 'fields'
+
+const ADV_TABS: { id: AdvTab; label: string }[] = [
+  { id: 'form', label: 'Form' },
+  { id: 'fields', label: 'Field Mapping' },
+]
 
 export function Adapters() {
   const adapters = useScraperStore((s) => s.adapters)
@@ -79,11 +124,12 @@ export function Adapters() {
   const network = useNetworkStore()
 
   const [list, setList] = useState<AdapterDefinition[]>(() => getAllDefinitions())
-  const [form, setForm] = useState<AdapterFormState>(() => loadDraftForm() ?? emptyForm())
+  const [form, setForm] = useState<AdapterFormState>(() => loadDraft()?.form ?? emptyForm())
+  const [aiInput, setAiInput] = useState<AiSourceInput>(() => loadDraft()?.aiInput ?? emptyAiSourceInput())
   const [wizardOpen, setWizardOpen] = useState(() => Boolean(localStorage.getItem(DRAFT_KEY)))
   const [advOpen, setAdvOpen] = useState(false)
   const [advTab, setAdvTab] = useState<AdvTab>('form')
-  const [editingId, setEditingId] = useState<string | null>(null)
+  const [editingId, setEditingId] = useState<string | null>(() => loadDraft()?.editingId ?? null)
   const [testing, setTesting] = useState(false)
   const [testResult, setTestResult] = useState<AdapterTestResult | null>(null)
   const [genreTesting, setGenreTesting] = useState(false)
@@ -91,18 +137,24 @@ export function Adapters() {
   const [genreLimit, setGenreLimit] = useState<'all' | '10' | '1'>('10')
   const [savedFlash, setSavedFlash] = useState<string | null>(null)
   const [viewing, setViewing] = useState<AdapterDefinition | null>(null)
-  const [advanced, setAdvanced] = useState(false)
+  const [advanced, setAdvanced] = useState(() => loadDraft()?.advanced ?? false)
+  const [aiOpen, setAiOpen] = useState(() => loadDraft()?.aiOpen ?? false)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [jsonText, setJsonText] = useState(() => {
-    const f = loadDraftForm()
-    return f ? JSON.stringify(formToDefinition(f), null, 2) : ''
-  })
-  const [jsonDirty, setJsonDirty] = useState(false)
+  const [jsonText, setJsonText] = useState(() => loadDraft()?.jsonText ?? '')
+  const [jsonDirty, setJsonDirty] = useState(() => loadDraft()?.jsonDirty ?? false)
+  const [dirty, setDirty] = useState(() => loadDraft()?.dirty ?? false)
 
   useEffect(() => {
-    const t = setTimeout(() => localStorage.setItem(DRAFT_KEY, JSON.stringify(form)), 400)
+    const t = setTimeout(
+      () =>
+        localStorage.setItem(
+          DRAFT_KEY,
+          JSON.stringify({ form, aiInput, jsonText, jsonDirty, editingId, dirty, advanced, aiOpen }),
+        ),
+      400,
+    )
     return () => clearTimeout(t)
-  }, [form])
+  }, [form, aiInput, jsonText, jsonDirty, editingId, dirty, advanced, aiOpen])
 
   useEffect(() => {
     if (!jsonDirty && jsonText !== '') {
@@ -110,9 +162,32 @@ export function Adapters() {
     }
   }, [form, jsonDirty, jsonText])
 
+  const unsaved = wizardOpen && dirty
+
+  const discardGuard = (): boolean => {
+    if (!unsaved) return true
+    return window.confirm('You have unsaved changes in the adapter editor. Discard them and continue?')
+  }
+
+  useEffect(() => {
+    if (!unsaved) return
+    const handler = (e: BeforeUnloadEvent) => {
+      localStorage.setItem(
+        DRAFT_KEY,
+        JSON.stringify({ form, aiInput, jsonText, jsonDirty, editingId, dirty, advanced, aiOpen }),
+      )
+      e.preventDefault()
+      e.returnValue = ''
+    }
+    window.addEventListener('beforeunload', handler)
+    return () => window.removeEventListener('beforeunload', handler)
+  }, [unsaved, form, aiInput, jsonText, jsonDirty, editingId, dirty, advanced, aiOpen])
+
   const patch = (p: Partial<AdapterFormState>) => {
     setJsonDirty(false)
     setGenreResults(null)
+    setSavedFlash(null)
+    setDirty(true)
     setForm((s) => ({ ...s, ...p }))
   }
 
@@ -178,7 +253,7 @@ export function Adapters() {
     return `${base}-${i}`
   }
 
-  const startWizard = (f: AdapterFormState, editId: string | null) => {
+  const startWizard = (f: AdapterFormState, editId: string | null, opts?: { ai?: boolean }) => {
     setForm(f)
     setEditingId(editId)
     setAdvOpen(false)
@@ -187,9 +262,24 @@ export function Adapters() {
     setSavedFlash(null)
     setViewing(null)
     setAdvanced(false)
+    setAiOpen(opts?.ai ?? false)
+    setAiInput(emptyAiSourceInput())
     setJsonDirty(false)
     setJsonText(JSON.stringify(formToDefinition(f), null, 2))
+    setDirty(false)
     setWizardOpen(true)
+  }
+
+  const startIntro = () => {
+    if (!discardGuard()) return
+    setViewing(null)
+    setWizardOpen(false)
+    setTestResult(null)
+    setSavedFlash(null)
+    setAiOpen(false)
+    setAiInput(emptyAiSourceInput())
+    setDirty(false)
+    localStorage.removeItem(DRAFT_KEY)
   }
 
   const startPasteJson = () => {
@@ -201,8 +291,11 @@ export function Adapters() {
     setSavedFlash(null)
     setViewing(null)
     setAdvanced(false)
+    setAiOpen(false)
+    setAiInput(emptyAiSourceInput())
     setJsonDirty(false)
     setJsonText('')
+    setDirty(false)
     setWizardOpen(true)
   }
 
@@ -213,7 +306,12 @@ export function Adapters() {
     )
   }
 
+  const startFromAi = () => {
+    startWizard(emptyForm(), null, { ai: true })
+  }
+
   const handleUseAsTemplate = (d: AdapterDefinition) => {
+    if (!discardGuard()) return
     const f = definitionToForm(d)
     f.id = uniqueId(d.id)
     f.name = `${d.name} (copy)`
@@ -221,6 +319,7 @@ export function Adapters() {
   }
 
   const handleEdit = (d: AdapterDefinition) => {
+    if (!discardGuard()) return
     startWizard(definitionToForm(d), d.id)
   }
 
@@ -288,6 +387,8 @@ export function Adapters() {
     useSettingsStore.getState().update({ activeAdapterId: target.id })
     setEditingId(target.id)
     reload()
+    localStorage.removeItem(DRAFT_KEY)
+    setDirty(false)
     setSavedFlash(`«${target.name}» saved and activated`)
   }
 
@@ -319,6 +420,10 @@ export function Adapters() {
       setAdvTab('form')
       setTestResult(null)
       setSavedFlash(null)
+      setAiInput(emptyAiSourceInput())
+      setJsonDirty(false)
+      setJsonText('')
+      setDirty(false)
     }
     reload()
   }
@@ -435,7 +540,7 @@ export function Adapters() {
                 Import
               </button>
               <button
-                onClick={() => startNew('empty')}
+                onClick={startIntro}
                 className="flex items-center gap-1 text-xs text-accent hover:text-accent-hover cursor-pointer transition-colors"
               >
                 <Plus size={12} />
@@ -578,11 +683,18 @@ export function Adapters() {
               <div>
                 <p className="text-content font-medium">Create a new adapter</p>
                 <p className="text-content-muted text-sm mt-1 max-w-sm">
-                  Build a source step by step without writing code, or start from one of the built-in
-                  adapters as a template.
+                  Build a source step by step without writing code, start from a built-in template, or
+                  generate a ready-to-paste JSON with AI.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2 justify-center">
+                <button
+                  onClick={startFromAi}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-btn-cyan-bg text-btn-cyan-text border border-btn-cyan-text/20 hover:bg-btn-cyan-hover transition-colors cursor-pointer"
+                >
+                  <Sparkles size={12} />
+                  Generate with AI
+                </button>
                 <button
                   onClick={() => startNew('empty')}
                   className="px-3 py-1.5 text-xs rounded-lg bg-btn-green-bg text-btn-green-text border border-btn-green-text/20 hover:bg-btn-green-hover transition-colors cursor-pointer"
@@ -617,8 +729,13 @@ export function Adapters() {
                 <h3 className="text-sm font-semibold text-content">
                   {editingId ? `Edit «${form.name || editingId}»` : `New adapter ${form.id ? `«${form.id}»` : ''}`}
                 </h3>
+                {unsaved && (
+                  <span className="ml-auto text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border bg-btn-amber-bg text-btn-amber-text border-btn-amber-text/30">
+                    Sin guardar
+                  </span>
+                )}
                 <span
-                  className={`ml-auto text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
+                  className={`text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border ${
                     effectiveValid
                       ? 'bg-chip-green-bg text-chip-green-text border-chip-green-text/30'
                       : 'bg-chip-red-bg text-chip-red-text border-chip-red-text/30'
@@ -626,6 +743,17 @@ export function Adapters() {
                 >
                   {effectiveValid ? 'Valid' : `${effectiveErrors.length} issue(s)`}
                 </span>
+                {!editingId && (
+                  <button
+                    type="button"
+                    onClick={startIntro}
+                    className="flex items-center gap-1 text-xs text-content-secondary hover:text-content transition-colors cursor-pointer"
+                    title="Close the editor and return to the start screen"
+                  >
+                    <X size={12} />
+                    Close
+                  </button>
+                )}
               </div>
 
               {/* Main panel: JSON & Test */}
@@ -635,14 +763,24 @@ export function Adapters() {
                 testing={testing}
                 testResult={testResult}
                 advanced={advanced}
+                aiOpen={aiOpen}
+                onAiOpenChange={setAiOpen}
+                aiInput={aiInput}
+                onAiInputChange={(v) => {
+                  setAiInput(v)
+                  setSavedFlash(null)
+                  setDirty(true)
+                }}
                 jsonText={jsonText}
                 jsonDirty={jsonDirty}
                 jsonParsed={jsonParsed}
                 def={effectiveDef}
                 onAdvancedChange={handleAdvancedChange}
-                onJsonChange={(text, dirty) => {
+                onJsonChange={(text, dirtyFlag) => {
                   setJsonText(text)
-                  setJsonDirty(dirty)
+                  setJsonDirty(dirtyFlag)
+                  setSavedFlash(null)
+                  setDirty(true)
                 }}
                 onSetFetchMode={(mode) => {
                   setTestResult(null)

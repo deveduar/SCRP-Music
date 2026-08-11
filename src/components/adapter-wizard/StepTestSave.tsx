@@ -19,7 +19,7 @@ import type { AdapterTestResult } from '../../services/adapter-tester'
 import type { GenreUrlCheck } from '../../services/adapter-genre-tester'
 import { AdapterSummary } from './AdapterSummary'
 import { AiSourceForm } from './AiSourceForm'
-import { buildAiPrompt, emptyAiSourceInput } from '../../services/ai-prompt'
+import { buildAiPrompt } from '../../services/ai-prompt'
 import type { AiSourceInput } from '../../services/ai-prompt'
 
 const invalidClass = 'border-btn-red-text/50'
@@ -31,6 +31,10 @@ export function StepTestSave({
   testResult,
   savedFlash,
   advanced,
+  aiOpen,
+  onAiOpenChange,
+  aiInput,
+  onAiInputChange,
   jsonText,
   jsonDirty,
   jsonParsed,
@@ -52,6 +56,10 @@ export function StepTestSave({
   testResult: AdapterTestResult | null
   savedFlash?: string
   advanced: boolean
+  aiOpen: boolean
+  onAiOpenChange: (v: boolean) => void
+  aiInput: AiSourceInput
+  onAiInputChange: (v: AiSourceInput) => void
   jsonText: string
   jsonDirty: boolean
   jsonParsed: AdapterParseResult | null
@@ -67,22 +75,20 @@ export function StepTestSave({
   onGenreLimitChange: (v: 'all' | '10' | '1') => void
   onTestGenres: () => void
 }) {
-  const [aiOpen, setAiOpen] = useState(false)
   const [promptOpen, setPromptOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [pasteError, setPasteError] = useState(false)
-  const [sourceInput, setSourceInput] = useState<AiSourceInput>(() => emptyAiSourceInput())
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const jsonOk = jsonParsed?.ok ?? false
   const antiBotBlocked =
     testResult !== null &&
     testResult.errors.some((e) => /HTTP 403|HTTP 429|Cloudflare|Attention Required/i.test(e))
-  const aiPrompt = buildAiPrompt(sourceInput)
+  const aiPrompt = buildAiPrompt(aiInput)
   const canCopy =
-    sourceInput.url.trim() !== '' ||
-    sourceInput.sampleText.trim() !== '' ||
-    sourceInput.detailSampleText.trim() !== ''
+    aiInput.url.trim() !== '' ||
+    aiInput.sampleText.trim() !== '' ||
+    aiInput.detailSampleText.trim() !== ''
 
   const copyPrompt = () => {
     navigator.clipboard?.writeText(aiPrompt).then(() => {
@@ -205,7 +211,7 @@ export function StepTestSave({
       <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
-          onClick={() => setAiOpen((v) => !v)}
+          onClick={() => onAiOpenChange(!aiOpen)}
           className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg bg-btn-cyan-bg text-btn-cyan-text border border-btn-cyan-text/20 hover:bg-btn-cyan-hover transition-colors cursor-pointer"
         >
           <Sparkles size={12} />
@@ -232,7 +238,7 @@ export function StepTestSave({
             returns the adapter JSON — paste that JSON into the editor to validate and load it. If a
             page can't be reached, inspect it (F12 → Network) and paste the HTML/JSON as the sample.
           </p>
-          <AiSourceForm value={sourceInput} onChange={setSourceInput} />
+          <AiSourceForm value={aiInput} onChange={onAiInputChange} />
           <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
