@@ -8,6 +8,7 @@ import { Scraper } from './pages/Scraper'
 import { History } from './pages/History'
 import { Stats } from './pages/Stats'
 import { Settings } from './pages/Settings'
+import { About } from './pages/About'
 import { useReleasesStore } from './stores/releases'
 import { useUserStateStore } from './stores/user-state'
 import { useScraperStore } from './stores/scraper'
@@ -132,6 +133,7 @@ export default function App() {
                 <Route path="/history" element={<History />} />
                 <Route path="/stats" element={<Stats />} />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/about" element={<About />} />
               </Route>
             </Routes>
           </ErrorBoundary>

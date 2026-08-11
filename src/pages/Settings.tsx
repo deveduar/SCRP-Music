@@ -7,6 +7,7 @@ import { useScraperStore } from '../stores/scraper'
 import db, { exportAll, importAll } from '../storage/db'
 import { getFetchInfo } from '../services/fetch-info'
 import { useNetworkStore } from '../stores/network'
+import { PageFooter } from '../components/PageFooter'
 
 export function Settings() {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -354,6 +355,8 @@ export function Settings() {
           </button>
         </div>
       </div>
+
+      <PageFooter />
     </div>
   )
 }

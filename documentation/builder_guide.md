@@ -127,7 +127,7 @@ Editar (**Edit**) o usar **Use as template** carga una **copia de trabajo** en e
 el adaptador activo: el badge **Active** de la lista solo cambia al pulsar **Save adapter** (guarda y
 activa). Mientras tanto puedes alternar entre editables sin problema, pero:
 
-- El chip **«Sin guardar»** (ámbar) aparece en la cabecera del editor mientras haya cambios que aún no
+- El chip **«Unsaved»** (ámbar) aparece en la cabecera del editor mientras haya cambios que aún no
   has guardado; desaparece al guardar y vuelve si vuelves a editar.
 - Si intentas **cerrar o recargar** la pestaña con cambios sin guardar, el navegador te avisa antes de
   salir (el borrador se escribe al momento, así que nada se pierde).

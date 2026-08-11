@@ -8,6 +8,7 @@ import {
   Settings,
   Globe,
   Braces,
+  Info,
   Menu,
   X,
   WifiOff,
@@ -81,7 +82,7 @@ export function Layout() {
           </NavLink>
         ))}
       </nav>
-      <div className="p-2 border-t border-border-main">
+      <div className="p-2 border-t border-border-main space-y-1">
         <NavLink
           to="/settings"
           onClick={closeSidebar}
@@ -95,6 +96,20 @@ export function Layout() {
         >
           <Settings className="w-4 h-4" />
           Settings
+        </NavLink>
+        <NavLink
+          to="/about"
+          onClick={closeSidebar}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+              isActive
+                ? 'bg-surface-tertiary text-content font-medium'
+                : 'text-content-secondary hover:text-content hover:bg-surface-secondary'
+            }`
+          }
+        >
+          <Info className="w-4 h-4" />
+          About
         </NavLink>
       </div>
     </aside>
@@ -129,7 +144,9 @@ export function Layout() {
             <Menu className="w-5 h-5" />
           </button>
         </div>
-        <Outlet />
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <Outlet />
+        </div>
       </main>
     </div>
   )

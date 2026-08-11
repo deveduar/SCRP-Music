@@ -731,7 +731,7 @@ export function Adapters() {
                 </h3>
                 {unsaved && (
                   <span className="ml-auto text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded-full border bg-btn-amber-bg text-btn-amber-text border-btn-amber-text/30">
-                    Sin guardar
+                    Unsaved
                   </span>
                 )}
                 <span
