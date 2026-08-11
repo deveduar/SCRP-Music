@@ -26,6 +26,7 @@ import {
 } from '../services/adapter-registry'
 import { validateAdapterDefinition, parseAdapterJson } from '../services/adapter-schema'
 import { createAdapterFromDef } from '../services/adapter-engine'
+import { importAdapterDefs } from '../services/adapter-import'
 import { testAdapter } from '../services/adapter-tester'
 import type { AdapterTestResult } from '../services/adapter-tester'
 import { testGenres } from '../services/adapter-genre-tester'
@@ -455,48 +456,12 @@ export function Adapters() {
   const handleImportAdapters = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    let imported = 0
-    let skipped = 0
-    let invalid = 0
     try {
       const text = await file.text()
       const parsed = JSON.parse(text) as unknown
-      let defs: unknown[] = []
-      if (Array.isArray(parsed)) {
-        defs = parsed
-      } else if (parsed && typeof parsed === 'object') {
-        const wrapper = parsed as { adapters?: unknown }
-        if (Array.isArray(wrapper.adapters)) {
-          defs = wrapper.adapters
-        } else {
-          defs = [parsed]
-        }
-      }
-      const now = new Date().toISOString()
-      for (const raw of defs) {
-        const v = validateAdapterDefinition(raw)
-        if (!v.ok || !v.def) {
-          invalid++
-          continue
-        }
-        const target = v.def
-        if (getBuiltinDefinition(target.id) || hasCustomDefinition(target.id)) {
-          skipped++
-          continue
-        }
-        await saveCustomAdapter({
-          id: target.id,
-          name: target.name,
-          def: target,
-          createdAt: now,
-          updatedAt: now,
-        })
-        registerCustomDefinition(target)
-        registerAdapter(createAdapterFromDef(target) as never)
-        imported++
-      }
+      const result = await importAdapterDefs(parsed)
       reload()
-      alert(`Import finished: ${imported} imported, ${skipped} skipped (id already exists), ${invalid} invalid.`)
+      alert(`Import finished: ${result.imported} imported, ${result.skipped} skipped (id already exists), ${result.invalid} invalid.`)
     } catch (err) {
       alert('Import failed: ' + (err as Error).message)
     }

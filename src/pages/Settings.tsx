@@ -7,6 +7,7 @@ import { useScraperStore } from '../stores/scraper'
 import db, { exportAll, importAll } from '../storage/db'
 import { getFetchInfo } from '../services/fetch-info'
 import { useNetworkStore } from '../stores/network'
+import { importAdapterDefs } from '../services/adapter-import'
 import { PageFooter } from '../components/PageFooter'
 
 export function Settings() {
@@ -47,13 +48,23 @@ export function Settings() {
     try {
       const text = await file.text()
       const data = JSON.parse(text)
-      if (data.version !== 1) {
+      if (data.version !== 1 && data.version !== 2) {
         alert('Invalid export file: version mismatch.')
         return
       }
-      const summary = `Import ${data.releases?.length ?? 0} releases, ${data.states?.length ?? 0} states, ${data.history?.length ?? 0} history entries, ${data.jobs?.length ?? 0} jobs? This will replace all current data.`
+      const adapterCount = Array.isArray(data.adapters) ? data.adapters.length : 0
+      const summary =
+        `Import ${data.releases?.length ?? 0} releases, ${data.states?.length ?? 0} states, ` +
+        `${data.history?.length ?? 0} history entries, ${data.jobs?.length ?? 0} jobs` +
+        (adapterCount > 0 ? `, ${adapterCount} adapters` : '') +
+        '? This will replace current releases, states, history and jobs' +
+        (adapterCount > 0 ? ' and add imported adapters' : '') +
+        '.'
       if (!window.confirm(summary)) return
       await importAll(data)
+      if (adapterCount > 0) {
+        await importAdapterDefs(data.adapters)
+      }
       useReleasesStore.getState().initFromDb()
       useUserStateStore.getState().loadAllStates()
       useUserStateStore.getState().loadHistory()

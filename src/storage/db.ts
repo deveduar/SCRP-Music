@@ -128,21 +128,23 @@ export async function getAllHistory(): Promise<HistoryEntry[]> {
 }
 
 export async function exportAll(): Promise<ExportPayload> {
-  const [releases, states, history, jobs] = await Promise.all([
+  const [releases, states, history, jobs, customAdapters] = await Promise.all([
     getAllReleases(),
     getAllStates(),
     getAllHistory(),
     getJobs(),
+    getCustomAdapters(),
   ])
   const settings = await getSettings().catch(() => undefined)
   return {
-    version: 1,
+    version: 2,
     exportedAt: new Date().toISOString(),
     releases,
     states,
     history,
     jobs,
     settings: settings ?? null,
+    adapters: customAdapters.map((e) => e.def),
   }
 }
 

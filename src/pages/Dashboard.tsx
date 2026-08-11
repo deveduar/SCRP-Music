@@ -1,9 +1,12 @@
 import { useEffect, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useReleasesStore } from '../stores/releases'
 import { useUserStateStore } from '../stores/user-state'
 import { useScraperStore } from '../stores/scraper'
 import { StatsCard } from '../components/StatsCard'
-import { DiscAlbum, Heart, Headphones, Clock, Users, Building2, Link2, MousePointerClick, History, CheckCircle2, XCircle } from 'lucide-react'
+import { EmptyState } from '../components/EmptyState'
+import { useJsonReleasesImport } from '../hooks/useJsonReleasesImport'
+import { DiscAlbum, Heart, Headphones, Clock, Users, Building2, Link2, MousePointerClick, History, CheckCircle2, XCircle, Globe, Upload, Braces, Info, Archive } from 'lucide-react'
 
 function formatRelativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
@@ -25,6 +28,7 @@ export function Dashboard() {
   const historyLoaded = useUserStateStore((s) => s.loaded)
   const loadHistory = useUserStateStore((s) => s.loadHistory)
   const jobs = useScraperStore((s) => s.jobs)
+  const { inputRef, handleFile, openPicker } = useJsonReleasesImport()
 
   useEffect(() => {
     if (!historyLoaded) loadHistory()
@@ -84,9 +88,59 @@ export function Dashboard() {
 
   if (!loaded) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-content-muted">No releases loaded. Go to Scraper or Browse to load data.</p>
-      </div>
+      <EmptyState
+        icon={<DiscAlbum className="w-12 h-12" />}
+        title="Welcome to SCRP Music"
+        description={
+          <>
+            Browse releases from royalty-free and Creative Commons sources. Get started by scraping
+            with an adapter, importing a release library, or restoring a backup.
+          </>
+        }
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFile}
+          className="hidden"
+        />
+        <Link
+          to="/scraper"
+          className="flex items-center gap-2 px-4 py-2 bg-accent/15 text-accent border border-accent/30 rounded-lg hover:bg-accent/25 transition-colors text-sm font-medium"
+        >
+          <Globe className="w-4 h-4" />
+          Scrape releases
+        </Link>
+        <button
+          onClick={openPicker}
+          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors text-sm"
+        >
+          <Upload className="w-4 h-4" />
+          Import JSON
+        </button>
+        <Link
+          to="/settings"
+          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors text-sm"
+        >
+          <Archive className="w-4 h-4" />
+          Restore backup
+        </Link>
+        <Link
+          to="/adapters"
+          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors text-sm"
+        >
+          <Braces className="w-4 h-4" />
+          Adapters
+        </Link>
+        <Link
+          to="/about"
+          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors text-sm"
+        >
+          <Info className="w-4 h-4" />
+          Learn more
+        </Link>
+      </EmptyState>
     )
   }
 

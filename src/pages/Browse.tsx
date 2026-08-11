@@ -1,40 +1,35 @@
-import { useCallback, useRef, useState } from 'react'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useReleasesStore } from '../stores/releases'
-import type { Release } from '../types/release'
 import { ReleaseList } from '../components/ReleaseList'
 import { BrowseToolbar } from '../components/BrowseToolbar'
-import { Upload } from 'lucide-react'
+import { EmptyState } from '../components/EmptyState'
+import { useJsonReleasesImport } from '../hooks/useJsonReleasesImport'
+import { Upload, Globe } from 'lucide-react'
 
 export function Browse() {
-  const inputRef = useRef<HTMLInputElement>(null)
+  const { inputRef, handleFile, openPicker } = useJsonReleasesImport()
   const loaded = useReleasesStore((s) => s.loaded)
   const loading = useReleasesStore((s) => s.loading)
   const filtered = useReleasesStore((s) => s.filtered)
-  const loadReleases = useReleasesStore((s) => s.loadReleases)
   const selectionMode = useReleasesStore((s) => s.selectionMode)
   const selectedIds = useReleasesStore((s) => s.selectedIds)
   const toggleSelection = useReleasesStore((s) => s.toggleSelection)
   const [highlightCount, setHighlightCount] = useState<number | undefined>(undefined)
   const [compactView, setCompactView] = useState(false)
 
-  const handleFile = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
-    try {
-      const text = await file.text()
-      const data: Release[] = JSON.parse(text)
-      await loadReleases(data)
-    } catch (err) {
-      console.error('Failed to load JSON:', err)
-    }
-  }, [loadReleases])
-
   if (!loaded && !loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-full gap-4">
-        <p className="text-content-muted">
-          No releases loaded. Use the <strong>Scraper</strong> tab or load a JSON file.
-        </p>
+      <EmptyState
+        icon={<Globe className="w-12 h-12" />}
+        title="No releases to browse"
+        description={
+          <>
+            Scrape releases with an adapter on the Scraper tab, or load a release library from a
+            JSON file.
+          </>
+        }
+      >
         <input
           ref={inputRef}
           type="file"
@@ -42,14 +37,21 @@ export function Browse() {
           onChange={handleFile}
           className="hidden"
         />
+        <Link
+          to="/scraper"
+          className="flex items-center gap-2 px-4 py-2 bg-accent/15 text-accent border border-accent/30 rounded-lg hover:bg-accent/25 transition-colors text-sm font-medium"
+        >
+          <Globe className="w-4 h-4" />
+          Go to Scraper
+        </Link>
         <button
-          onClick={() => inputRef.current?.click()}
-          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors"
+          onClick={openPicker}
+          className="flex items-center gap-2 px-4 py-2 bg-surface-tertiary text-content-secondary rounded-lg hover:bg-border-light hover:text-content transition-colors text-sm"
         >
           <Upload className="w-4 h-4" />
-          Load JSON File
+          Load JSON
         </button>
-      </div>
+      </EmptyState>
     )
   }
 
@@ -74,7 +76,7 @@ export function Browse() {
       <BrowseToolbar
         compactView={compactView}
         onToggleCompactView={() => setCompactView((prev) => !prev)}
-        onLoadJson={() => inputRef.current?.click()}
+        onLoadJson={openPicker}
         onHighlightChange={setHighlightCount}
       />
 
